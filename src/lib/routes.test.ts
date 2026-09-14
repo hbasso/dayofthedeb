@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { isAdminLoginPath, isAdminPath, isPublicPath, safeAdminNextPath, safeNextPath } from '@/lib/routes';
+import { isAdminLoginPath, isAdminPath, isPublicPath, normalizeForGate, safeAdminNextPath, safeNextPath } from '@/lib/routes';
 
 describe('isPublicPath', () => {
   it('treats the unlock page as public', () => {
@@ -38,6 +38,41 @@ describe('safeNextPath', () => {
   it('never sends the guest back to the unlock page', () => {
     expect(safeNextPath('/unlock')).toBe('/');
     expect(safeNextPath('/unlock?next=/rsvp')).toBe('/');
+  });
+});
+
+describe('normalizeForGate', () => {
+  it('lowercases and leaves already-clean paths unchanged', () => {
+    expect(normalizeForGate('/admin')).toBe('/admin');
+  });
+
+  it('lowercases and strips a trailing slash', () => {
+    expect(normalizeForGate('/Admin/')).toBe('/admin');
+  });
+
+  it('percent-decodes single-encoded characters', () => {
+    expect(normalizeForGate('/%61dmin')).toBe('/admin');
+  });
+
+  it('collapses repeated slashes', () => {
+    expect(normalizeForGate('//admin')).toBe('/admin');
+  });
+
+  it('percent-decodes and lowercases together', () => {
+    expect(normalizeForGate('/api/%65xport')).toBe('/api/export');
+  });
+
+  it('collapses slashes introduced by decoding', () => {
+    expect(normalizeForGate('/%2Fadmin')).toBe('/admin');
+  });
+
+  it('keeps the root path as-is', () => {
+    expect(normalizeForGate('/')).toBe('/');
+  });
+
+  it('never throws on a malformed percent-encoding', () => {
+    expect(() => normalizeForGate('/%E0%A4%A')).not.toThrow();
+    expect(typeof normalizeForGate('/%E0%A4%A')).toBe('string');
   });
 });
 

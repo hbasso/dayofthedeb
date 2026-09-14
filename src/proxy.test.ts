@@ -86,4 +86,32 @@ describe('proxy: admin gate', () => {
     const response = await proxy(new NextRequest('http://localhost:3000/administrator'));
     expect(response.headers.get('location')).toBe('http://localhost:3000/unlock?next=%2Fadministrator');
   });
+
+  it('recognizes percent-encoded admin paths without a cookie', async () => {
+    const response = await proxy(new NextRequest('http://localhost:3000/%61dmin'));
+    expect(response.status).toBe(307);
+    expect(response.headers.get('location')).toBe('http://localhost:3000/admin/login?next=%2F%2561dmin');
+  });
+
+  it('recognizes case-variant admin paths without a cookie', async () => {
+    const response = await proxy(new NextRequest('http://localhost:3000/Admin'));
+    expect(response.status).toBe(307);
+    expect(response.headers.get('location')).toBe('http://localhost:3000/admin/login?next=%2FAdmin');
+  });
+
+  it('answers 401 for a percent-encoded export API path', async () => {
+    const response = await proxy(new NextRequest('http://localhost:3000/api/%65xport'));
+    expect(response.status).toBe(401);
+  });
+
+  it('does not let a site-only cookie through a percent-encoded admin path', async () => {
+    const response = await proxy(new NextRequest('http://localhost:3000/%61dmin', { headers: { cookie: await siteCookie() } }));
+    expect(response.status).toBe(307);
+    expect(response.headers.get('location')).toBe('http://localhost:3000/admin/login?next=%2F%2561dmin');
+  });
+
+  it('still passes through the public unlock page in a different case', async () => {
+    const response = await proxy(new NextRequest('http://localhost:3000/UNLOCK'));
+    expect(response.headers.get('x-middleware-next')).toBe('1');
+  });
 });

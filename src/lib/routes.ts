@@ -20,6 +20,27 @@ export function isAdminLoginPath(pathname: string): boolean {
   return pathname === ADMIN_LOGIN_PATH;
 }
 
+/**
+ * Normalizes a raw request pathname for gate classification (isAdminPath / isAdminLoginPath /
+ * isPublicPath). Percent-decodes, lowercases, collapses repeated slashes, and strips a trailing
+ * slash (except for the root). If the pathname contains a malformed percent-encoding that cannot
+ * be decoded, this returns the raw pathname lowercased instead of throwing — an undecodable path
+ * is still fully protected because the site gate and admin gate both apply by default (deny by
+ * default; only positively-matched public/login paths are let through), so falling back to the
+ * un-decoded (but lowercased) value never grants unintended access.
+ */
+export function normalizeForGate(pathname: string): string {
+  let decoded: string;
+  try {
+    decoded = decodeURIComponent(pathname);
+  } catch {
+    decoded = pathname;
+  }
+  const lowered = decoded.toLowerCase();
+  const segments = lowered.split('/').filter((segment) => segment.length > 0);
+  return segments.length > 0 ? `/${segments.join('/')}` : '/';
+}
+
 /** A same-origin path, or null. */
 function internalPath(next: unknown): string | null {
   if (typeof next !== 'string' || !next.startsWith('/') || next.startsWith('//')) return null;
