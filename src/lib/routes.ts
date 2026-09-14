@@ -4,6 +4,13 @@ const ADMIN_PATHS = ['/admin', '/api/export'] as const;
 export const ADMIN_HOME_PATH = '/admin';
 export const ADMIN_LOGIN_PATH = '/admin/login';
 
+/**
+ * Sentinel path returned by normalizeForGate for a decoded path containing `.`/`..` segments.
+ * It's an admin, non-login, non-API path, so both gates treat it as protected regardless of
+ * what a prefix match against PUBLIC_PATHS/ADMIN_PATHS would otherwise say about the raw path.
+ */
+export const REJECTED_GATE_PATH = '/admin/__rejected';
+
 function matchesAny(pathname: string, paths: readonly string[]): boolean {
   return paths.some((path) => pathname === path || pathname.startsWith(`${path}/`));
 }
@@ -38,6 +45,10 @@ export function normalizeForGate(pathname: string): string {
   }
   const lowered = decoded.toLowerCase();
   const segments = lowered.split('/').filter((segment) => segment.length > 0);
+  // Dot segments (`.`/`..`) mean the decoded path doesn't reflect where the router will
+  // ultimately resolve the request; classify by prefix instead of trusting them, and treat
+  // the path as fully protected rather than guessing how they'd resolve.
+  if (segments.some((segment) => segment === '.' || segment === '..')) return REJECTED_GATE_PATH;
   return segments.length > 0 ? `/${segments.join('/')}` : '/';
 }
 

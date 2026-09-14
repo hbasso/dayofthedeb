@@ -114,4 +114,25 @@ describe('proxy: admin gate', () => {
     const response = await proxy(new NextRequest('http://localhost:3000/UNLOCK'));
     expect(response.headers.get('x-middleware-next')).toBe('1');
   });
+
+  it('passes through /unlock with no cookie', async () => {
+    const response = await proxy(new NextRequest('http://localhost:3000/unlock'));
+    expect(response.headers.get('x-middleware-next')).toBe('1');
+  });
+
+  it('rejects a dot-segment path disguised as /unlock even with a valid site cookie', async () => {
+    const response = await proxy(
+      new NextRequest('http://localhost:3000/unlock%2F..%2Frsvp', { headers: { cookie: await siteCookie() } }),
+    );
+    expect(response.status).toBe(307);
+    expect(response.headers.get('location')).toBe('http://localhost:3000/admin/login?next=%2Funlock%252F..%252Frsvp');
+  });
+
+  it('rejects a dot-segment path targeting the export API with no cookies', async () => {
+    const response = await proxy(new NextRequest('http://localhost:3000/unlock%2f..%2f..%2fapi%2fexport'));
+    expect(response.status).toBe(307);
+    expect(response.headers.get('location')).toBe(
+      'http://localhost:3000/admin/login?next=%2Funlock%252f..%252f..%252fapi%252fexport',
+    );
+  });
 });

@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { isAdminLoginPath, isAdminPath, isPublicPath, normalizeForGate, safeAdminNextPath, safeNextPath } from '@/lib/routes';
+import {
+  isAdminLoginPath,
+  isAdminPath,
+  isPublicPath,
+  normalizeForGate,
+  REJECTED_GATE_PATH,
+  safeAdminNextPath,
+  safeNextPath,
+} from '@/lib/routes';
 
 describe('isPublicPath', () => {
   it('treats the unlock page as public', () => {
@@ -73,6 +81,16 @@ describe('normalizeForGate', () => {
   it('never throws on a malformed percent-encoding', () => {
     expect(() => normalizeForGate('/%E0%A4%A')).not.toThrow();
     expect(typeof normalizeForGate('/%E0%A4%A')).toBe('string');
+  });
+
+  it('rejects dot segments introduced by decoding instead of resolving them', () => {
+    expect(normalizeForGate('/unlock%2F..%2Frsvp')).toBe(REJECTED_GATE_PATH);
+    expect(normalizeForGate('/unlock/%2e%2e/rsvp')).toBe(REJECTED_GATE_PATH);
+    expect(normalizeForGate('/unlock%2f.%2frsvp')).toBe(REJECTED_GATE_PATH);
+  });
+
+  it('never classifies a rejected dot-segment path as public', () => {
+    expect(isPublicPath(normalizeForGate('/unlock%2F..%2Frsvp'))).toBe(false);
   });
 });
 
