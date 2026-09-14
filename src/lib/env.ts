@@ -1,5 +1,7 @@
 // Read lazily so `next build` works without secrets present.
 // Not marked server-only because src/proxy.ts imports it; none of these are NEXT_PUBLIC_, so they never reach a client bundle.
+// Airtable getters must NOT go in this file; they belong in a server-only module
+// (src/lib/airtable/client.ts) so client imports fail the build (DESIGN §3). This file stays proxy-safe.
 
 function required(name: string): string {
   const value = process.env[name];

@@ -136,7 +136,7 @@ Not a security boundary. Runs entirely behind Layer 1. Identifies which househol
 
 Protects the guest list and export from ordinary guests, all of whom hold the site password.
 
-- Middleware additionally requires a signed `admin_session` cookie for `/admin` and `/api/export`.
+- The proxy additionally requires a signed `admin_session` cookie for `/admin` and `/api/export`. The proxy must exempt `/admin/login` from the admin-cookie check to avoid a redirect loop.
 - `/admin/login` posts to an `adminLogin` server action validating `ADMIN_PASSWORD` (constant-time), setting a separate signed cookie.
 - The export route handler re-checks the admin cookie server-side. Never rely on the page's protection alone; the API must guard itself, or someone with the site password could fetch the CSV directly.
 
@@ -148,10 +148,11 @@ Protects the guest list and export from ordinary guests, all of whom hold the si
 - The proxy matcher must exclude `/_next/static`, `/_next/image`, `favicon`, `/unlock`, and the unlock endpoint to avoid redirect loops.
 - Consider `iron-session` to handle both sessions cleanly rather than hand-rolling cookie signing.
 - The submit-rsvp action must verify that every submitted guest ID belongs to the submitted invitation before writing, and every server action re-checks the site session itself rather than relying on the proxy alone.
+- Every server action except `unlockSite` calls `requireSiteSession()` (in `lib/auth.ts`) as its first line.
 
 ### Interaction with caching and party-night traffic
 
-Middleware runs per request at the edge and only checks a cookie, which is cheap. Static and ISR content stays cached; the gate does not defeat it. Once a guest unlocks, the cookie persists, so party-night repeat visits are one cookie check plus cached static HTML. The whole-site gate does not compromise the party-night performance profile.
+The proxy runs per request (Node runtime) and only unseals a cookie, which is cheap. Static and ISR content stays cached; the gate does not defeat it. Once a guest unlocks, the cookie persists, so party-night repeat visits are one cookie check plus cached static HTML. The whole-site gate does not compromise the party-night performance profile.
 
 ---
 
@@ -277,7 +278,7 @@ Turquoise and a sunny yellow are available as secondary accents. Because everyth
 
 ### Fonts
 
-Pair a display serif with a clean sans using `--font-display` and `--font-text` (supported by the shadcn theme layer). The prototype used Fraunces for display and a humanist sans for body; carry that pairing unless the host's invitation suite suggests otherwise.
+Pair a display serif with a clean sans using `--font-display` and `--font-sans` (the shadcn/Tailwind v4 default name). The prototype used Fraunces for display and a humanist sans for body; carry that pairing unless the host's invitation suite suggests otherwise.
 
 ---
 
@@ -333,7 +334,10 @@ src/
 │  │  └─ rsvp.ts                    # write mapper
 │  ├─ guest-list.ts                 # cached fetch of the whole list (server-only)
 │  ├─ search.ts                     # pure normalize + match (no I/O, unit-tested)
-│  ├─ auth.ts                       # cookie sign/verify, password checks (server-only)
+│  ├─ auth.ts                       # server-only: password checks, getSiteSession, requireSiteSession
+│  ├─ session.ts                    # iron-session options + seal check (proxy-safe)
+│  ├─ env.ts                        # lazy env getters (proxy-safe; no Airtable token here)
+│  ├─ routes.ts                     # pure: public paths, safe redirect
 │  ├─ csv.ts                        # unpivot -> CSV/xlsx
 │  └─ utils.ts                      # cn(), shadcn helpers
 ├─ server/actions/
@@ -386,6 +390,9 @@ These do not block scaffolding.
 
 - **Alt-names population.** The `altNames` field must be seeded for common nicknames and accented names, or search will miss real guests. Decide who populates it during list entry.
 - **Max party size.** Six named guests per invitation is the current maximum (from the couple-plus-two-kids case). Confirm none exceed this.
+- **Private photos.** The proxy matcher skips `/_next/static` and `/_next/image`, so statically imported or optimized images are reachable by URL without the site password. Before building the gallery, decide: accept public-by-URL photos, or serve private photos through a gated route handler.
+- **Password strength and rate limiting.** The printed site password is the only real security boundary and is matched case-insensitively. Before printing, either choose a high-entropy passphrase (e.g. three random words) or add Upstash rate limiting to `unlockSite`; decide before the printer deadline, not in Phase 7.
+- **Expired session during a form submit.** The proxy answers a POST with a 307 to /unlock, which surfaces as a confusing action error. Revisit in the RSVP phase (e.g. 401 for requests carrying a `Next-Action` header).
 
 Resolved: the plus-one model. A plus-one is a `Has Plus One` checkbox (host eligibility) plus a `Plus One Name` captured at RSVP, both on the named guest's row. There are no separate +1 records, so the earlier boolean-vs-name and pre-seeding questions no longer apply.
 

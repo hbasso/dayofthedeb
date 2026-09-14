@@ -2,6 +2,7 @@ import 'server-only';
 import { createHash, timingSafeEqual } from 'node:crypto';
 import { getIronSession } from 'iron-session';
 import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation';
 import { siteSessionOptions, type SiteSession } from '@/lib/session';
 
 /** Constant-time comparison. Hashing first gives equal-length buffers regardless of input length. */
@@ -18,4 +19,10 @@ export function normalizeSitePassword(value: string): string {
 
 export async function getSiteSession() {
   return getIronSession<SiteSession>(await cookies(), siteSessionOptions());
+}
+
+/** First line of every server action except unlockSite. Proxy coverage follows the route, not the action. */
+export async function requireSiteSession(): Promise<void> {
+  const session = await getSiteSession();
+  if (session.unlocked !== true) redirect('/unlock');
 }
