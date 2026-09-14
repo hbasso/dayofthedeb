@@ -180,7 +180,7 @@ The entire sequence above happens on `/rsvp`; there is no `/rsvp/[household]` UR
 
 Normalize both the query and the stored names before comparing: lowercase, strip accents, trim, and include the `altNames` list. This handles accents (Héctor vs Hector), nicknames (Sue vs Susan), and casing. Implemented as pure functions in `lib/search.ts`.
 
-A query needs at least a first and last name (two words). Each query word must be the start of some word in the guest's name or alt names ("Dan Reyes" finds "Daniel Reyes"); apostrophes and periods are ignored and hyphens split words. The household label is not searched. At most 10 households are returned. There is no typo tolerance, so alt names matter.
+A query needs at least two words of two or more letters; each word must start a different word of the guest's name or alt names ("Dan Reyes" finds "Daniel Reyes"); apostrophes and periods are ignored and hyphens split words. The household label is not searched. Results are ranked (exact whole-word matches first) and capped at 10, and when more match the site asks the guest to type more of their name. There is no typo tolerance, so alt names matter.
 
 ### Editing an existing RSVP
 

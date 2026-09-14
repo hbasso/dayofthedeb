@@ -28,9 +28,9 @@ describe('reading the real base', () => {
   });
 
   it('finds an accented name typed without the accent', () => {
-    expect(searchInvitations(invitations, 'Sofia Reyes').map((invitation) => invitation.household)).toContain(
-      'Daniel & Sofía Reyes',
-    );
+    expect(
+      searchInvitations(invitations, 'Sofia Reyes').matches.map((invitation) => invitation.household),
+    ).toContain('Daniel & Sofía Reyes');
   });
 });
 

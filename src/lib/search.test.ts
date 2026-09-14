@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { isSearchableQuery, MAX_SEARCH_RESULTS, normalizeName, searchInvitations } from '@/lib/search';
+import {
+  isSearchableQuery,
+  MAX_QUERY_TOKENS,
+  MAX_SEARCH_RESULTS,
+  MIN_TOKEN_LENGTH,
+  normalizeName,
+  searchInvitations,
+} from '@/lib/search';
 import type { Guest, Invitation } from '@/types/domain';
 
 const guest = (id: string, name: string, altNames?: string[]): Guest => ({
@@ -22,7 +29,7 @@ const invitations: Invitation[] = [
   { id: 'inv5', household: 'Héctor Salinas', guests: [guest('g9', 'Héctor Salinas')] },
 ];
 
-const households = (query: string) => searchInvitations(invitations, query).map((invitation) => invitation.id);
+const households = (query: string) => searchInvitations(invitations, query).matches.map((invitation) => invitation.id);
 
 describe('normalizeName', () => {
   it('lowercases, strips accents, and collapses spacing', () => {
@@ -33,6 +40,28 @@ describe('normalizeName', () => {
   it('drops apostrophes and periods and splits on hyphens', () => {
     expect(normalizeName("Liam O'Brien-Garza")).toBe('liam obrien garza');
     expect(normalizeName('Liam O’Brien Jr.')).toBe('liam obrien jr');
+  });
+});
+
+describe('isSearchableQuery', () => {
+  it('requires at least a first and last name', () => {
+    expect(isSearchableQuery('Musgrove')).toBe(false);
+    expect(isSearchableQuery('Emma Musgrove')).toBe(true);
+  });
+
+  it('requires every token to be at least MIN_TOKEN_LENGTH characters', () => {
+    expect(MIN_TOKEN_LENGTH).toBe(2);
+    expect(isSearchableQuery('Dan Reyes')).toBe(true);
+    expect(isSearchableQuery('Jo Hunter')).toBe(true);
+    expect(isSearchableQuery('d r')).toBe(false);
+    expect(isSearchableQuery('a a')).toBe(false);
+    expect(isSearchableQuery('D Reyes')).toBe(false);
+  });
+
+  it('caps the number of query tokens at MAX_QUERY_TOKENS', () => {
+    expect(MAX_QUERY_TOKENS).toBe(6);
+    expect(isSearchableQuery('ab cd ef gh ij kl')).toBe(true);
+    expect(isSearchableQuery('ab cd ef gh ij kl mn')).toBe(false);
   });
 });
 
@@ -63,7 +92,18 @@ describe('searchInvitations', () => {
   });
 
   it('lists a household once even when several members match', () => {
-    expect(households('Reyes Reyes')).toEqual(['inv1', 'inv2']);
+    const dual: Invitation[] = [
+      { id: 'dual', household: 'Sofia Squared', guests: [guest('gx', 'Sofia Reyes'), guest('gy', 'Sofia Reyes')] },
+    ];
+    expect(searchInvitations(dual, 'Sofia Reyes').matches.map((invitation) => invitation.id)).toEqual(['dual']);
+  });
+
+  it('requires each query token to match a different candidate token', () => {
+    expect(households('Reyes Reyes')).toEqual([]);
+  });
+
+  it('does not match by reusing the same surname token twice', () => {
+    expect(households('Garza Garza')).toEqual([]);
   });
 
   it('handles punctuation and multi-part surnames', () => {
@@ -76,8 +116,6 @@ describe('searchInvitations', () => {
   });
 
   it('requires at least a first and last name', () => {
-    expect(isSearchableQuery('Musgrove')).toBe(false);
-    expect(isSearchableQuery('Emma Musgrove')).toBe(true);
     expect(households('Musgrove')).toEqual([]);
     expect(households('   ')).toEqual([]);
   });
@@ -87,16 +125,44 @@ describe('searchInvitations', () => {
   });
 
   it('returns the full roster of a matched household', () => {
-    expect(searchInvitations(invitations, 'Emma Musgrove')[0].guests).toHaveLength(2);
+    expect(searchInvitations(invitations, 'Emma Musgrove').matches[0].guests).toHaveLength(2);
   });
 
-  it('caps the number of results', () => {
+  it('ranks exact token matches above prefix matches, regardless of input order', () => {
+    const ranked: Invitation[] = [
+      { id: 'prefix', household: 'Daniel Family', guests: [guest('ga', 'Daniel Reyes')] },
+      { id: 'exact', household: 'Dan Family', guests: [guest('gb', 'Dan Reyes')] },
+    ];
+    expect(searchInvitations(ranked, 'Dan Reyes').matches.map((invitation) => invitation.id)).toEqual([
+      'exact',
+      'prefix',
+    ]);
+  });
+
+  it('caps the number of results and flags truncation when more than MAX_SEARCH_RESULTS match', () => {
     const many = Array.from({ length: 15 }, (_, index) => ({
       id: `many${index}`,
       household: `Lopez ${index}`,
       guests: [guest(`m${index}`, 'Ana Lopez')],
     }));
     expect(MAX_SEARCH_RESULTS).toBe(10);
-    expect(searchInvitations(many, 'Ana Lopez')).toHaveLength(10);
+    const result = searchInvitations(many, 'Ana Lopez');
+    expect(result.matches).toHaveLength(10);
+    expect(result.truncated).toBe(true);
+  });
+
+  it('does not flag truncation when exactly MAX_SEARCH_RESULTS match', () => {
+    const exactlyTen = Array.from({ length: 10 }, (_, index) => ({
+      id: `ten${index}`,
+      household: `Lopez ${index}`,
+      guests: [guest(`t${index}`, 'Ana Lopez')],
+    }));
+    const result = searchInvitations(exactlyTen, 'Ana Lopez');
+    expect(result.matches).toHaveLength(10);
+    expect(result.truncated).toBe(false);
+  });
+
+  it('returns an untruncated empty result for an unsearchable query', () => {
+    expect(searchInvitations(invitations, 'Musgrove')).toEqual({ matches: [], truncated: false });
   });
 });
