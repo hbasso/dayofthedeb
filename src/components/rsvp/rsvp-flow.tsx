@@ -1,11 +1,12 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 import { GuestRoster } from '@/components/rsvp/guest-roster';
 import { NameSearchForm } from '@/components/rsvp/name-search-form';
 import { RsvpConfirmation } from '@/components/rsvp/rsvp-confirmation';
 import { SearchResults } from '@/components/rsvp/search-results';
-import { pushFlowStep, replaceFlowStep, useFlowHistory } from '@/components/rsvp/use-flow-history';
+import { useFlowHistory } from '@/components/rsvp/use-flow-history';
+import type { EntryStep } from '@/lib/flow-history';
 import type { RosterHousehold, SearchOutcome } from '@/types/rsvp';
 
 type Step =
@@ -20,28 +21,22 @@ function freshSearch(query = ''): Step {
 
 export function RsvpFlow() {
   const [step, setStep] = useState<Step>({ name: 'search', query: '', initial: true });
-  const stepRef = useRef(step);
-  useEffect(() => {
-    stepRef.current = step;
-  });
 
-  // A Back gesture moves the flow back one step, based on whatever step it's currently on.
-  // 'search' does nothing here so the browser leaves /rsvp normally; 'done' resets to a
-  // fresh search rather than reopening the roster/results that were just submitted.
-  useFlowHistory(() => {
-    const current = stepRef.current;
-    if (current.name === 'roster') {
-      const { outcome } = current;
-      setStep(outcome.households.length > 1 ? { name: 'results', outcome } : freshSearch(outcome.query));
-    } else if (current.name === 'results') {
-      setStep(freshSearch(current.outcome.query));
-    } else if (current.name === 'done') {
-      setStep(freshSearch());
-    }
+  // History entries mirror the forward steps, so Back (gesture or in-page button) walks
+  // back through them; see @/lib/flow-history for how each popstate is resolved.
+  const history = useFlowHistory({
+    step: step.name,
+    onBack: (target: EntryStep) => {
+      if (target === step.name) return;
+      const outcome = step.name === 'results' || step.name === 'roster' ? step.outcome : null;
+      if (target === 'results' && outcome) setStep({ name: 'results', outcome });
+      else setStep(freshSearch(outcome?.query));
+    },
+    onReset: (query) => setStep(freshSearch(query)),
   });
 
   function goToRoster(household: RosterHousehold, outcome: SearchOutcome) {
-    pushFlowStep('roster');
+    history.pushStep('roster');
     setStep({ name: 'roster', household, outcome });
   }
 
@@ -49,7 +44,7 @@ export function RsvpFlow() {
     if (outcome.households.length === 1) {
       goToRoster(outcome.households[0], outcome);
     } else {
-      pushFlowStep('results');
+      history.pushStep('results');
       setStep({ name: 'results', outcome });
     }
   }
@@ -62,27 +57,24 @@ export function RsvpFlow() {
         <SearchResults
           outcome={step.outcome}
           onSelect={(household) => goToRoster(household, step.outcome)}
-          onSearchAgain={() => window.history.back()}
+          onSearchAgain={history.back}
         />
       );
     case 'roster': {
       const { outcome } = step;
-      const fromResults = outcome.households.length > 1;
       return (
         <GuestRoster
           key={step.household.id}
           household={step.household}
-          backLabel={fromResults ? 'Back to search results' : 'Search a different name'}
-          onBack={() => window.history.back()}
-          onRestart={() => setStep(freshSearch(outcome.query))}
-          onSubmitted={(household) => {
-            replaceFlowStep('done');
-            setStep({ name: 'done', household });
-          }}
+          backLabel={outcome.households.length > 1 ? 'Back to search results' : 'Search a different name'}
+          onBack={history.back}
+          onRestart={() => history.resetToSearch(outcome.query)}
+          // No history entry for 'done': Back from it rewinds to a fresh search instead.
+          onSubmitted={(household) => setStep({ name: 'done', household })}
         />
       );
     }
     case 'done':
-      return <RsvpConfirmation household={step.household} onDone={() => setStep(freshSearch())} />;
+      return <RsvpConfirmation household={step.household} onDone={() => history.resetToSearch('')} />;
   }
 }

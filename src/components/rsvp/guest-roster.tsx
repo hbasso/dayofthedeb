@@ -22,11 +22,15 @@ const SUBMIT_ERRORS = {
   error: 'We couldn’t save your RSVP just now. Please try again in a moment.',
 } as const;
 
+const ISSUES_MESSAGE = 'Please answer for everyone in your party.';
+
 export function GuestRoster({ household, backLabel, onBack, onRestart, onSubmitted }: GuestRosterProps) {
   const headingRef = useFocusOnMount<HTMLHeadingElement>();
   const [state, dispatch] = useReducer(rosterReducer, household, initRosterState);
   const [showIssues, setShowIssues] = useState(false);
   const [submitAttempt, setSubmitAttempt] = useState(0);
+  const [issuesMessage, setIssuesMessage] = useState('');
+  const announceTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const [submitStatus, setSubmitStatus] = useState<'invalid' | 'error' | null>(null);
   const [pending, startTransition] = useTransition();
 
@@ -48,12 +52,19 @@ export function GuestRoster({ household, backLabel, onBack, onRestart, onSubmitt
     document.querySelector<HTMLElement>(selector)?.focus();
   }, [submitAttempt]);
 
+  useEffect(() => () => clearTimeout(announceTimer.current), []);
+
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setSubmitStatus(null);
     if (issues.length > 0) {
       setShowIssues(true);
       setSubmitAttempt((attempt) => attempt + 1);
+      // Empty the live region, then refill it a tick later so screen readers announce
+      // the message again on every blocked attempt, even when the wording is unchanged.
+      setIssuesMessage('');
+      clearTimeout(announceTimer.current);
+      announceTimer.current = setTimeout(() => setIssuesMessage(ISSUES_MESSAGE), 50);
       return;
     }
     startTransition(async () => {
@@ -89,8 +100,8 @@ export function GuestRoster({ household, backLabel, onBack, onRestart, onSubmitt
         ))}
       </ul>
       <PartyTally count={partyHeadcount(state)} />
-      <p key={submitAttempt} role="status" aria-live="assertive" hidden={!blockedByIssues} className="text-center text-destructive">
-        Please answer for everyone in your party.
+      <p role="status" aria-live="assertive" className="text-center text-destructive empty:sr-only">
+        {blockedByIssues ? issuesMessage : ''}
       </p>
       {submitStatus && (
         <p role="alert" className="text-center text-destructive">

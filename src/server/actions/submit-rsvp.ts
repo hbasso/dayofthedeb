@@ -21,8 +21,9 @@ export async function submitRsvp(input: unknown): Promise<SubmitRsvpResult> {
     if (!invitation || parsed.answers.length !== invitation.guests.length) return { status: 'invalid' };
 
     const updates = buildRsvpUpdates(invitation, parsed.answers, respondedOnDate());
+    const client = getAirtableClient();
     writeStarted = true;
-    await writeRsvp(getAirtableClient(), updates);
+    await writeRsvp(client, updates);
 
     return { status: 'ok', household: withAnswers(toRosterHousehold(invitation), parsed.answers) };
   } catch (error) {
