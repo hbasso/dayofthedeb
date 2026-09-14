@@ -1,10 +1,9 @@
 'use client';
 
-import type { SearchOutcome } from '@/components/rsvp/name-search-form';
 import { ResultCard } from '@/components/rsvp/result-card';
 import { useFocusOnMount } from '@/components/rsvp/use-focus-on-mount';
 import { Button } from '@/components/ui/button';
-import type { RosterHousehold } from '@/types/rsvp';
+import type { RosterHousehold, SearchOutcome } from '@/types/rsvp';
 
 interface SearchResultsProps {
   outcome: SearchOutcome;

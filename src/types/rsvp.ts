@@ -35,3 +35,9 @@ export type SubmitRsvpResult =
   | { status: 'ok'; household: RosterHousehold }
   | { status: 'invalid' }
   | { status: 'error' };
+
+export interface SearchOutcome {
+  query: string;
+  households: RosterHousehold[];
+  truncated: boolean;
+}

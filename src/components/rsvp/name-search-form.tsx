@@ -1,18 +1,12 @@
 'use client';
 
-import { useState, useTransition, type FormEvent } from 'react';
+import { useEffect, useRef, useState, useTransition, type FormEvent } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { isSearchableQuery } from '@/lib/search';
 import { searchGuests } from '@/server/actions/search-guests';
-import type { RosterHousehold } from '@/types/rsvp';
-
-export interface SearchOutcome {
-  query: string;
-  households: RosterHousehold[];
-  truncated: boolean;
-}
+import type { SearchOutcome } from '@/types/rsvp';
 
 const MESSAGES = {
   'invalid-query': 'Please enter the first and last name of someone in your party.',
@@ -20,10 +14,23 @@ const MESSAGES = {
   error: 'Search isn’t working right now. Please try again in a moment.',
 } as const;
 
-export function NameSearchForm({ initialQuery = '', onFound }: { initialQuery?: string; onFound: (outcome: SearchOutcome) => void }) {
+interface NameSearchFormProps {
+  initialQuery?: string;
+  /** Focus the name field on mount. Leave off on first page load so focus isn't stolen from the guest. */
+  autoFocus?: boolean;
+  onFound: (outcome: SearchOutcome) => void;
+}
+
+export function NameSearchForm({ initialQuery = '', autoFocus = false, onFound }: NameSearchFormProps) {
   const [query, setQuery] = useState(initialQuery);
   const [message, setMessage] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+  const inputRef = useRef<HTMLInputElement>(null);
+  const autoFocusRef = useRef(autoFocus);
+
+  useEffect(() => {
+    if (autoFocusRef.current) inputRef.current?.focus();
+  }, []);
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -44,13 +51,19 @@ export function NameSearchForm({ initialQuery = '', onFound }: { initialQuery?: 
     });
   }
 
+  const describedBy = ['guest-name-description', message && 'guest-name-message'].filter(Boolean).join(' ');
+
   return (
     <form onSubmit={handleSubmit} noValidate className="space-y-4">
+      <p id="guest-name-description" className="text-lg text-muted-foreground">
+        Type the first and last name of anyone in your party to find your invitation.
+      </p>
       <div className="space-y-2">
         <Label htmlFor="guest-name" className="text-base">
           Your first and last name
         </Label>
         <Input
+          ref={inputRef}
           id="guest-name"
           name="guest-name"
           value={query}
@@ -59,7 +72,7 @@ export function NameSearchForm({ initialQuery = '', onFound }: { initialQuery?: 
           autoCapitalize="words"
           enterKeyHint="search"
           aria-invalid={message ? true : undefined}
-          aria-describedby={message ? 'guest-name-message' : undefined}
+          aria-describedby={describedBy}
           className="h-12 bg-card text-lg"
         />
       </div>

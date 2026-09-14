@@ -18,10 +18,7 @@ export default function RsvpPage() {
       </Link>
       <header className="mt-6 mb-8 space-y-2">
         <h1 className="font-display text-5xl">RSVP</h1>
-        <p className="text-lg text-muted-foreground">
-          Type the first and last name of anyone in your party to find your invitation.
-          {deadline && ` Please respond by ${deadline}.`}
-        </p>
+        {deadline && <p className="text-lg text-muted-foreground">Please respond by {deadline}.</p>}
       </header>
       <RsvpFlow />
     </main>

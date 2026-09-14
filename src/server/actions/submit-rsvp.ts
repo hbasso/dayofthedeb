@@ -14,19 +14,24 @@ export async function submitRsvp(input: unknown): Promise<SubmitRsvpResult> {
   const parsed = parseSubmitRsvpInput(input);
   if (!parsed) return { status: 'invalid' };
 
+  let writeStarted = false;
   try {
     const invitation = (await getInvitations()).find((candidate) => candidate.id === parsed.invitationId);
     // One answer per guest: buildRsvpUpdates rejects strangers and duplicates, so equal counts mean full coverage.
     if (!invitation || parsed.answers.length !== invitation.guests.length) return { status: 'invalid' };
 
     const updates = buildRsvpUpdates(invitation, parsed.answers, respondedOnDate());
+    writeStarted = true;
     await writeRsvp(getAirtableClient(), updates);
-    updateTag(GUEST_LIST_TAG);
 
     return { status: 'ok', household: withAnswers(toRosterHousehold(invitation), parsed.answers) };
   } catch (error) {
     if (error instanceof RsvpValidationError) return { status: 'invalid' };
     console.error('submitRsvp failed', error);
     return { status: 'error' };
+  } finally {
+    // A large household writes in multiple PATCH batches; even a partial write can change
+    // what's on Airtable, so the cache must be refreshed whenever a write was attempted.
+    if (writeStarted) updateTag(GUEST_LIST_TAG);
   }
 }

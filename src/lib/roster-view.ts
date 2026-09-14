@@ -12,7 +12,7 @@ export function toRosterHousehold(invitation: Invitation): RosterHousehold {
       name: guest.name,
       hasPlusOne: guest.hasPlusOne,
       attending: guest.attending,
-      plusOneName: guest.plusOneName,
+      ...(guest.hasPlusOne ? { plusOneName: guest.plusOneName } : {}),
     })),
   };
 }

@@ -116,11 +116,11 @@ describe('submitRsvp', () => {
     expectNoWrite();
   });
 
-  it('reports an error and skips the cache refresh when Airtable fails', async () => {
+  it('reports an error but still refreshes the cache when Airtable fails partway through', async () => {
     const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
     mocks.updateRecords.mockRejectedValue(new Error('Airtable 503'));
     expect(await submitRsvp(validInput)).toEqual({ status: 'error' });
-    expect(mocks.updateTag).not.toHaveBeenCalled();
+    expect(mocks.updateTag).toHaveBeenCalledWith('guests');
     expect(consoleError).toHaveBeenCalled();
     consoleError.mockRestore();
   });

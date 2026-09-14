@@ -1,15 +1,10 @@
 import { describe, expect, it, vi } from 'vitest';
 import type { AirtableClient } from '@/lib/airtable/client';
 import { AIRTABLE } from '@/lib/airtable/fields';
-import {
-  buildRsvpUpdates,
-  MAX_PLUS_ONE_NAME_LENGTH,
-  respondedOnDate,
-  RsvpValidationError,
-  writeRsvp,
-} from '@/lib/airtable/rsvp';
-import type { RsvpAnswer } from '@/lib/airtable/rsvp';
+import { buildRsvpUpdates, respondedOnDate, RsvpValidationError, writeRsvp } from '@/lib/airtable/rsvp';
+import { MAX_PLUS_ONE_NAME_LENGTH } from '@/lib/plus-one';
 import type { Invitation } from '@/types/domain';
+import type { RsvpAnswer } from '@/types/rsvp';
 
 const G = AIRTABLE.guests.fields;
 const DAY = '2026-09-14';

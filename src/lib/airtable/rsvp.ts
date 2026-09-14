@@ -8,9 +8,6 @@ import type { RsvpAnswer } from '@/types/rsvp';
 
 const G = AIRTABLE.guests.fields;
 
-export { MAX_PLUS_ONE_NAME_LENGTH };
-export type { RsvpAnswer };
-
 export class RsvpValidationError extends Error {
   constructor(message: string) {
     super(message);

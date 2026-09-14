@@ -38,6 +38,24 @@ describe('toRosterHousehold', () => {
     expect(serialized).not.toContain('G-Man');
     expect(serialized).not.toContain('2026-09-10');
   });
+
+  it('drops a host-entered plus-one name for a guest without plus-one eligibility', () => {
+    const invitationWithStrayName: Invitation = {
+      ...invitation,
+      guests: [
+        invitation.guests[0],
+        { ...invitation.guests[1], plusOneName: 'Should Not Appear' },
+      ],
+    };
+    const household = toRosterHousehold(invitationWithStrayName);
+    expect(household.guests[1]).toEqual({
+      id: id('Mario'),
+      name: 'Mario Biggs',
+      hasPlusOne: false,
+      attending: null,
+    });
+    expect(JSON.stringify(household)).not.toContain('Should Not Appear');
+  });
 });
 
 describe('withAnswers', () => {
