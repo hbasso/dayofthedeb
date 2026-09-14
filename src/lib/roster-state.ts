@@ -85,18 +85,13 @@ export function rosterIssues(household: RosterHousehold, state: RosterState): Ro
   });
 }
 
-/**
- * One answer per guest, in household roster order (submitRsvp requires exactly one
- * answer per guest). Call only after rosterIssues(household, state) is empty: an
- * unanswered guest still produces an entry here, with `attending` carrying `null`
- * despite the RsvpAnswer type, so callers must not submit until issues are resolved.
- */
+/** Call only when rosterIssues is empty; unanswered guests are skipped. */
 export function toRsvpAnswers(household: RosterHousehold, state: RosterState): RsvpAnswer[] {
-  return household.guests.map((guest): RsvpAnswer => {
+  return household.guests.flatMap((guest): RsvpAnswer[] => {
     const answer = state[guest.id];
-    const attending = (answer?.attending ?? null) as RsvpAnswer['attending'];
-    return answer && bringsNamedGuest(answer)
-      ? { guestId: guest.id, attending, plusOneName: answer.plusOneName.trim() }
-      : { guestId: guest.id, attending };
+    if (!answer || answer.attending === null) return [];
+    return bringsNamedGuest(answer)
+      ? [{ guestId: guest.id, attending: answer.attending, plusOneName: answer.plusOneName.trim() }]
+      : [{ guestId: guest.id, attending: answer.attending }];
   });
 }

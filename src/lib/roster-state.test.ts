@@ -131,7 +131,8 @@ describe('toRsvpAnswers', () => {
   });
 
   it('includes the trimmed plus-one name for a guest bringing someone', () => {
-    const state = initRosterState(household);
-    expect(toRsvpAnswers(household, state)[1]).toEqual({ guestId: TRUMAN, attending: 'yes', plusOneName: 'Priya Raman' });
+    const answers = toRsvpAnswers(household, initRosterState(household));
+    expect(answers.find((answer) => answer.guestId === TRUMAN)).toEqual({ guestId: TRUMAN, attending: 'yes', plusOneName: 'Priya Raman' });
+    expect(answers.map((answer) => answer.guestId)).toEqual([TRUMAN, MARIO]);
   });
 });
