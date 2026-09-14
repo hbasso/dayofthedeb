@@ -75,6 +75,6 @@ export function RsvpFlow() {
       );
     }
     case 'done':
-      return <RsvpConfirmation household={step.household} onDone={() => history.resetToSearch('')} />;
+      return <RsvpConfirmation household={step.household} />;
   }
 }

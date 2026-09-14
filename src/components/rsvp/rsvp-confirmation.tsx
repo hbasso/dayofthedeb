@@ -1,12 +1,13 @@
 'use client';
 
+import Link from 'next/link';
 import { useFocusOnMount } from '@/components/rsvp/use-focus-on-mount';
-import { Button } from '@/components/ui/button';
+import { buttonVariants } from '@/components/ui/button';
 import { siteConfig } from '@/config/site';
 import { formatEventDate } from '@/lib/dates';
 import type { RosterHousehold } from '@/types/rsvp';
 
-export function RsvpConfirmation({ household, onDone }: { household: RosterHousehold; onDone: () => void }) {
+export function RsvpConfirmation({ household }: { household: RosterHousehold }) {
   const headingRef = useFocusOnMount<HTMLHeadingElement>();
   const attending = household.guests.filter((guest) => guest.attending === 'yes');
   const declined = household.guests.filter((guest) => guest.attending === 'no');
@@ -46,9 +47,14 @@ export function RsvpConfirmation({ household, onDone }: { household: RosterHouse
       <p className="text-muted-foreground">
         Plans change? Search your name again anytime{deadline ? ` before ${deadline}` : ''} to update your RSVP.
       </p>
-      <Button type="button" variant="outline" onClick={onDone} className="h-12 w-full text-base">
-        RSVP for another party
-      </Button>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <Link href="/" className={buttonVariants({ variant: 'outline', className: 'h-12 w-full text-base' })}>
+          Back to home
+        </Link>
+        <Link href="/venue" className={buttonVariants({ className: 'h-12 w-full text-base' })}>
+          Venue &amp; directions
+        </Link>
+      </div>
     </div>
   );
 }

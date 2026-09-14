@@ -164,7 +164,7 @@ describe('flow history', () => {
     expect(planPop(model, 'done', 0).action).toEqual({ kind: 'applyReset', query: '', silent: false });
   });
 
-  it('(e) "RSVP for another party" rewinds to the original entry, then a new search pushes index 1', () => {
+  it('(e) a reset to search rewinds to the original entry, then a new search pushes index 1', () => {
     const sim = new FlowSim();
     sim.forward('results');
     sim.forward('roster');
