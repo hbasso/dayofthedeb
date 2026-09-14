@@ -30,6 +30,9 @@ describe('safeNextPath', () => {
     expect(safeNextPath('//evil.example')).toBe('/');
     expect(safeNextPath('/\\evil.example')).toBe('/');
     expect(safeNextPath('/\t/evil.example')).toBe('/');
+    expect(safeNextPath(`/${String.fromCharCode(10)}/evil.example`)).toBe('/');
+    expect(safeNextPath(`/${String.fromCharCode(13)}/evil.example`)).toBe('/');
+    expect(safeNextPath(`/rsvp${String.fromCharCode(0)}`)).toBe('/');
   });
 
   it('never sends the guest back to the unlock page', () => {
