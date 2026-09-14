@@ -2,6 +2,7 @@
 
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { HouseholdCombobox } from '@/components/admin/household-combobox';
 import { toStatusFilter, type GuestFilters, type HouseholdOption } from '@/lib/admin/guest-rows';
 
 const SELECT_CLASS =
@@ -51,19 +52,12 @@ export function GuestTableFilters({ filters, households, onChange }: GuestTableF
       </div>
       <div className="space-y-1">
         <Label htmlFor="guest-filter-household">Household</Label>
-        <select
+        <HouseholdCombobox
           id="guest-filter-household"
+          households={households}
           value={filters.invitationId}
-          onChange={(event) => onChange({ ...filters, invitationId: event.target.value })}
-          className={SELECT_CLASS}
-        >
-          <option value="">All households</option>
-          {households.map((household) => (
-            <option key={household.id} value={household.id}>
-              {household.household}
-            </option>
-          ))}
-        </select>
+          onChange={(invitationId) => onChange({ ...filters, invitationId })}
+        />
       </div>
     </div>
   );
