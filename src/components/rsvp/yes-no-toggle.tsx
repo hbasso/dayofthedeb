@@ -10,6 +10,7 @@ interface YesNoToggleProps {
   yesLabel?: string;
   noLabel?: string;
   legendClassName?: string;
+  error?: string;
 }
 
 const OPTIONS = ['yes', 'no'] as const;
@@ -22,7 +23,9 @@ export function YesNoToggle({
   yesLabel = 'Yes',
   noLabel = 'No',
   legendClassName,
+  error,
 }: YesNoToggleProps) {
+  const errorId = `${name}-error`;
   return (
     <fieldset>
       <legend className={cn('mb-2 text-base font-medium', legendClassName)}>{legend}</legend>
@@ -39,12 +42,15 @@ export function YesNoToggle({
                 !selected && 'border-border bg-card text-foreground hover:bg-muted',
               )}
             >
+              {/* eslint-disable-next-line jsx-a11y/role-supports-aria-props -- aria-invalid is a valid global ARIA state; announces the guest's unanswered radio group to screen readers */}
               <input
                 type="radio"
                 name={name}
                 value={option}
                 checked={selected}
                 onChange={() => onChange(option)}
+                aria-invalid={error ? true : undefined}
+                aria-describedby={error ? errorId : undefined}
                 className="sr-only"
               />
               {option === 'yes' ? yesLabel : noLabel}
@@ -52,6 +58,11 @@ export function YesNoToggle({
           );
         })}
       </div>
+      {error && (
+        <p id={errorId} className="mt-2 text-base text-destructive">
+          {error}
+        </p>
+      )}
     </fieldset>
   );
 }

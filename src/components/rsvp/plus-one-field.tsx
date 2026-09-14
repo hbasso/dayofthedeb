@@ -1,5 +1,3 @@
-'use client';
-
 import { YesNoToggle } from '@/components/rsvp/yes-no-toggle';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -53,7 +51,7 @@ export function PlusOneField({
             className="h-12 bg-card text-lg"
           />
           {showNameError && (
-            <p id={errorId} className="text-sm text-destructive">
+            <p id={errorId} className="text-base text-destructive">
               Please enter your guest&apos;s name, or choose No.
             </p>
           )}
