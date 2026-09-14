@@ -101,6 +101,7 @@ export interface Guest {
   hasPlusOne: boolean;   // host-set: may this guest bring a plus-one
   attending: Attendance;
   plusOneName?: string;  // captured at RSVP when they bring one; filled => counts a +1
+  respondedAt?: string;  // YYYY-MM-DD, set by the site on submit
 }
 
 export interface Invitation {
@@ -112,6 +113,8 @@ export interface Invitation {
 ```
 
 The Airtable mappers in `lib/airtable` translate records to these types. The rest of the app depends only on the domain types, never on Airtable record shapes.
+
+The app addresses Airtable by table and field IDs (`lib/airtable/fields.ts`), so renaming a column in the Airtable UI does not break the site. Adding or removing a field the site reads requires updating that file.
 
 ---
 
@@ -176,6 +179,8 @@ The entire sequence above happens on `/rsvp`; there is no `/rsvp/[household]` UR
 ### Name matching
 
 Normalize both the query and the stored names before comparing: lowercase, strip accents, trim, and include the `altNames` list. This handles accents (Héctor vs Hector), nicknames (Sue vs Susan), and casing. Implemented as pure functions in `lib/search.ts`.
+
+A query needs at least a first and last name (two words). Each query word must be the start of some word in the guest's name or alt names ("Dan Reyes" finds "Daniel Reyes"); apostrophes and periods are ignored and hyphens split words. The household label is not searched. At most 10 households are returned. There is no typo tolerance, so alt names matter.
 
 ### Editing an existing RSVP
 
@@ -330,8 +335,9 @@ src/
 ├─ lib/
 │  ├─ airtable/
 │  │  ├─ client.ts                  # server-only Airtable client (token)
+│  │  ├─ fields.ts                  # table + field IDs
 │  │  ├─ invitations.ts             # read mappers: records -> domain types
-│  │  └─ rsvp.ts                    # write mapper
+│  │  └─ rsvp.ts                    # write mapper + ownership validation
 │  ├─ guest-list.ts                 # cached fetch of the whole list (server-only)
 │  ├─ search.ts                     # pure normalize + match (no I/O, unit-tested)
 │  ├─ auth.ts                       # server-only: password checks, getSiteSession, requireSiteSession
@@ -362,7 +368,8 @@ src/
 
 ## 11. Caching and revalidation
 
-- `lib/guest-list.ts` wraps the Airtable fetch in a `'use cache'` function with `cacheTag('guests')` and a `cacheLife` of a few minutes.
+- `lib/guest-list.ts` wraps the Airtable fetch in a `'use cache: remote'` function (shared across Vercel instances) with `cacheTag('guests')` and a `cacheLife` of a few minutes.
+- The cache profile `guestList` (next.config.ts) is stale 60s / revalidate 300s / expire 3600s.
 - The fetch must page through the Airtable list endpoint, which returns at most 100 records per request plus an `offset` token for the next page. Loop until no offset comes back, or the cache will silently hold only the first 100 guests. At ~1,050 records that is ~11 sequential requests inside the 5-per-second per-base limit, and it runs once per revalidation, not per page view.
 - Reads (search, roster, admin, export) all draw from this cached list.
 - `submit-rsvp` calls `updateTag('guests')` after writing, so a guest who re-searches to edit sees their own update.
@@ -417,5 +424,6 @@ Resolved: the plus-one model. A plus-one is a `Has Plus One` checkbox (host elig
 - Editing gets a test: re-searching a household hydrates the roster with its current answers, and resubmitting overwrites them and refreshes `Responded At`.
 - Stats get a test: the response-rate denominator is households (or named guests), never the headcount, and plus-ones are excluded from it.
 - Before the real list is entered, run the full flow end to end against the seeded example households in the base (Biggs with its two plus-one states, Musgrove, Reyes, Hunter), which exercise the structural variations.
+- Run `npm run test:airtable` to check reads, search, and a restoring write round-trip against the real base.
 - Do a rehearsal of the invite drop on staging. This is a one-shot event with no second chance on invite night.
 ```
