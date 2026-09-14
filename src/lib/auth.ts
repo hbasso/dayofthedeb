@@ -3,7 +3,8 @@ import { createHash, timingSafeEqual } from 'node:crypto';
 import { getIronSession } from 'iron-session';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { siteSessionOptions, type SiteSession } from '@/lib/session';
+import { ADMIN_LOGIN_PATH } from '@/lib/routes';
+import { adminSessionOptions, siteSessionOptions, type AdminSession, type SiteSession } from '@/lib/session';
 
 /** Constant-time comparison. Hashing first gives equal-length buffers regardless of input length. */
 export function passwordsMatch(input: string, expected: string): boolean {
@@ -25,4 +26,14 @@ export async function getSiteSession() {
 export async function requireSiteSession(): Promise<void> {
   const session = await getSiteSession();
   if (session.unlocked !== true) redirect('/unlock');
+}
+
+export async function getAdminSession() {
+  return getIronSession<AdminSession>(await cookies(), adminSessionOptions());
+}
+
+/** First line of every admin server action and before any admin data read. The proxy guards the routes; this guards the data. */
+export async function requireAdminSession(): Promise<void> {
+  const session = await getAdminSession();
+  if (session.admin !== true) redirect(ADMIN_LOGIN_PATH);
 }

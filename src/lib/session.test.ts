@@ -1,6 +1,6 @@
 import { sealData } from 'iron-session';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { isSiteSealValid, SITE_SESSION_TTL_SECONDS } from '@/lib/session';
+import { ADMIN_SESSION_TTL_SECONDS, isAdminSealValid, isSiteSealValid, SITE_SESSION_TTL_SECONDS } from '@/lib/session';
 
 const SECRET = 'test-secret-that-is-at-least-32-characters-long';
 const seal = (data: object, password = SECRET) => sealData(data, { password, ttl: SITE_SESSION_TTL_SECONDS });
@@ -48,5 +48,30 @@ describe('isSiteSealValid', () => {
     await expect(isSiteSealValid('anything')).rejects.toThrow(/AUTH_SECRET/);
     vi.stubEnv('AUTH_SECRET', 'short');
     await expect(isSiteSealValid('anything')).rejects.toThrow(/AUTH_SECRET/);
+  });
+});
+
+describe('isAdminSealValid', () => {
+  const sealAdmin = (data: object, password = SECRET) =>
+    sealData(data, { password, ttl: ADMIN_SESSION_TTL_SECONDS });
+
+  it('accepts an admin seal made with AUTH_SECRET', async () => {
+    expect(await isAdminSealValid(await sealAdmin({ admin: true }))).toBe(true);
+  });
+
+  it('rejects a site seal presented as admin, and an admin seal presented as site', async () => {
+    const siteSeal = await sealData({ unlocked: true }, { password: SECRET, ttl: SITE_SESSION_TTL_SECONDS });
+    expect(await isAdminSealValid(siteSeal)).toBe(false);
+    expect(await isSiteSealValid(await sealAdmin({ admin: true }))).toBe(false);
+  });
+
+  it('rejects missing, forged, and expired admin seals', async () => {
+    expect(await isAdminSealValid(undefined)).toBe(false);
+    expect(await isAdminSealValid('forged')).toBe(false);
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date('2026-10-01T00:00:00Z'));
+    const oldSeal = await sealAdmin({ admin: true });
+    vi.setSystemTime(new Date('2026-10-09T00:00:00Z'));
+    expect(await isAdminSealValid(oldSeal)).toBe(false);
   });
 });

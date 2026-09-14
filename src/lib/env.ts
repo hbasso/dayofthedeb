@@ -18,3 +18,13 @@ export function getAuthSecret(): string {
   if (secret.length < 32) throw new Error('AUTH_SECRET must be at least 32 characters');
   return secret;
 }
+
+export const MIN_ADMIN_PASSWORD_LENGTH = 12;
+
+export function getAdminPassword(): string {
+  const password = readRequiredEnv('ADMIN_PASSWORD');
+  if (password.length < MIN_ADMIN_PASSWORD_LENGTH) {
+    throw new Error(`ADMIN_PASSWORD must be at least ${MIN_ADMIN_PASSWORD_LENGTH} characters`);
+  }
+  return password;
+}

@@ -1,19 +1,28 @@
 import { NextResponse, type NextRequest } from 'next/server';
-import { isPublicPath } from '@/lib/routes';
-import { isSiteSealValid, SITE_SESSION_COOKIE } from '@/lib/session';
+import { ADMIN_LOGIN_PATH, isAdminLoginPath, isAdminPath, isPublicPath } from '@/lib/routes';
+import { ADMIN_SESSION_COOKIE, isAdminSealValid, isSiteSealValid, SITE_SESSION_COOKIE } from '@/lib/session';
+
+function redirectWithNext(request: NextRequest, pathname: string): NextResponse {
+  const url = request.nextUrl.clone();
+  url.pathname = pathname;
+  url.search = `?next=${encodeURIComponent(request.nextUrl.pathname + request.nextUrl.search)}`;
+  return NextResponse.redirect(url);
+}
 
 export async function proxy(request: NextRequest) {
-  const { pathname, search } = request.nextUrl;
-  if (isPublicPath(pathname)) return NextResponse.next();
+  const { pathname } = request.nextUrl;
 
-  if (await isSiteSealValid(request.cookies.get(SITE_SESSION_COOKIE)?.value)) {
-    return NextResponse.next();
+  // Admin area: the admin password alone grants access (no invitation password needed).
+  if (isAdminPath(pathname)) {
+    if (isAdminLoginPath(pathname)) return NextResponse.next();
+    if (await isAdminSealValid(request.cookies.get(ADMIN_SESSION_COOKIE)?.value)) return NextResponse.next();
+    if (pathname.startsWith('/api/')) return new NextResponse(null, { status: 401 });
+    return redirectWithNext(request, ADMIN_LOGIN_PATH);
   }
 
-  const unlockUrl = request.nextUrl.clone();
-  unlockUrl.pathname = '/unlock';
-  unlockUrl.search = `?next=${encodeURIComponent(pathname + search)}`;
-  return NextResponse.redirect(unlockUrl);
+  if (isPublicPath(pathname)) return NextResponse.next();
+  if (await isSiteSealValid(request.cookies.get(SITE_SESSION_COOKIE)?.value)) return NextResponse.next();
+  return redirectWithNext(request, '/unlock');
 }
 
 export const config = {

@@ -68,3 +68,30 @@ describe('requireSiteSession', () => {
     expect(redirectMock).toHaveBeenCalledWith('/unlock');
   });
 });
+
+describe('requireAdminSession', () => {
+  beforeEach(() => {
+    redirectMock.mockReset();
+    getIronSessionMock.mockReset();
+    vi.stubEnv('AUTH_SECRET', 'test-secret-that-is-at-least-32-characters-long');
+  });
+
+  afterEach(() => {
+    vi.resetModules();
+    vi.unstubAllEnvs();
+  });
+
+  it('does not redirect when the admin flag is set', async () => {
+    getIronSessionMock.mockResolvedValue({ admin: true });
+    const { requireAdminSession } = await import('@/lib/auth');
+    await requireAdminSession();
+    expect(redirectMock).not.toHaveBeenCalled();
+  });
+
+  it('redirects to /admin/login when the admin flag is missing, even with a site session', async () => {
+    getIronSessionMock.mockResolvedValue({ unlocked: true });
+    const { requireAdminSession } = await import('@/lib/auth');
+    await requireAdminSession();
+    expect(redirectMock).toHaveBeenCalledWith('/admin/login');
+  });
+});

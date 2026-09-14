@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { isPublicPath, safeNextPath } from '@/lib/routes';
+import { isAdminLoginPath, isAdminPath, isPublicPath, safeAdminNextPath, safeNextPath } from '@/lib/routes';
 
 describe('isPublicPath', () => {
   it('treats the unlock page as public', () => {
@@ -38,5 +38,30 @@ describe('safeNextPath', () => {
   it('never sends the guest back to the unlock page', () => {
     expect(safeNextPath('/unlock')).toBe('/');
     expect(safeNextPath('/unlock?next=/rsvp')).toBe('/');
+  });
+});
+
+describe('admin paths', () => {
+  it('recognizes admin pages and the export API', () => {
+    for (const path of ['/admin', '/admin/login', '/api/export']) expect(isAdminPath(path)).toBe(true);
+    for (const path of ['/', '/rsvp', '/administrator', '/api/exports', '/unlock']) expect(isAdminPath(path)).toBe(false);
+  });
+
+  it('recognizes only the login page as the admin login path', () => {
+    expect(isAdminLoginPath('/admin/login')).toBe(true);
+    expect(isAdminLoginPath('/admin')).toBe(false);
+  });
+});
+
+describe('safeAdminNextPath', () => {
+  it('keeps admin page paths', () => {
+    expect(safeAdminNextPath('/admin')).toBe('/admin');
+    expect(safeAdminNextPath('/admin?status=awaiting')).toBe('/admin?status=awaiting');
+  });
+
+  it('falls back to /admin for anything else', () => {
+    for (const next of [null, '', '/admin/login', '/api/export', '/rsvp', '//evil.example', 'https://evil.example', '/administrator']) {
+      expect(safeAdminNextPath(next)).toBe('/admin');
+    }
   });
 });
