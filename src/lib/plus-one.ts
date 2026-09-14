@@ -10,3 +10,12 @@ export function storedPlusOneName(
   const trimmed = plusOneName?.trim() ?? '';
   return trimmed ? trimmed : null;
 }
+
+/** The plus-one who counts toward the headcount right now, or null. */
+export function countedPlusOne(guest: {
+  hasPlusOne: boolean;
+  attending: 'yes' | 'no' | null;
+  plusOneName?: string;
+}): string | null {
+  return guest.attending === 'yes' ? storedPlusOneName(guest.hasPlusOne, 'yes', guest.plusOneName) : null;
+}
