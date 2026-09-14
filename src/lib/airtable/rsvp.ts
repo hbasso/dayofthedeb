@@ -27,10 +27,23 @@ export function buildRsvpUpdates(
   answers: readonly RsvpAnswer[],
   respondedOn: string,
 ): RecordUpdate[] {
+  if (!Array.isArray(answers)) {
+    throw new RsvpValidationError('answers must be an array');
+  }
+
   const guestsById = new Map(invitation.guests.map((guest) => [guest.id, guest]));
   const answered = new Set<string>();
 
   return answers.map((answer) => {
+    if (answer === null || typeof answer !== 'object') {
+      throw new RsvpValidationError('Each answer must be an object');
+    }
+    if (typeof answer.guestId !== 'string') {
+      throw new RsvpValidationError('guestId must be a string');
+    }
+    if (answer.plusOneName !== undefined && typeof answer.plusOneName !== 'string') {
+      throw new RsvpValidationError('plusOneName must be a string');
+    }
     const guest = guestsById.get(answer.guestId);
     if (!guest) throw new RsvpValidationError(`Guest ${answer.guestId} is not on invitation ${invitation.id}`);
     if (answered.has(guest.id)) throw new RsvpValidationError(`Duplicate answer for guest ${guest.id}`);

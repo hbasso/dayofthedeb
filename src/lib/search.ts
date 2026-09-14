@@ -38,8 +38,8 @@ function guestMatches(queryTokens: readonly string[], guest: Guest): boolean {
 }
 
 export function searchInvitations(invitations: readonly Invitation[], query: string): Invitation[] {
+  if (!isSearchableQuery(query)) return [];
   const queryTokens = nameTokens(query);
-  if (queryTokens.length < MIN_QUERY_TOKENS) return [];
   return invitations
     .filter((invitation) => invitation.guests.some((guest) => guestMatches(queryTokens, guest)))
     .slice(0, MAX_SEARCH_RESULTS);

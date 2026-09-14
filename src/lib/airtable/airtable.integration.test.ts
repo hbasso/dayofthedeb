@@ -49,9 +49,14 @@ describe('writing to the real base', () => {
       expect(reread).toMatchObject({ attending: 'yes', respondedAt: respondedOnDate() });
     } finally {
       const originalAttending = noah.attending === 'yes' ? 'Yes' : noah.attending === 'no' ? 'No' : null;
-      await client.updateRecords(AIRTABLE.guests.tableId, [
-        { id: noah.id, fields: { [G.attending]: originalAttending, [G.respondedAt]: noah.respondedAt ?? null } },
-      ]);
+      const restoreFields: Record<string, unknown> = {
+        [G.attending]: originalAttending,
+        [G.respondedAt]: noah.respondedAt ?? null,
+      };
+      if (noah.hasPlusOne) {
+        restoreFields[G.plusOneName] = noah.plusOneName ?? null;
+      }
+      await client.updateRecords(AIRTABLE.guests.tableId, [{ id: noah.id, fields: restoreFields }]);
     }
   });
 });

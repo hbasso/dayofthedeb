@@ -1,13 +1,16 @@
 import { describe, expect, it, vi } from 'vitest';
 import { createAirtableClient, UPDATE_BATCH_SIZE } from '@/lib/airtable/client';
 
-const json = (body: unknown, status = 200) =>
-  new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } });
+type FetchLike = (url: string, init?: RequestInit) => Promise<Response>;
 
-function setup(responses: Response[] = []) {
-  const fetch = vi.fn(async (_url: string, _init?: RequestInit) => responses.shift() ?? json({ records: [] }));
-  const client = createAirtableClient({ token: 'pat-test-token', baseId: 'appTEST', fetch });
-  return { client, fetch };
+const json = (body: unknown, status = 200, headers?: Record<string, string>) =>
+  new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json', ...headers } });
+
+function setup(responses: Response[] = [], extra: { sleep?: (ms: number) => Promise<void>; random?: () => number } = {}) {
+  const fetch = vi.fn<FetchLike>(async () => responses.shift() ?? json({ records: [] }));
+  const sleep = extra.sleep ?? vi.fn(async () => {});
+  const client = createAirtableClient({ token: 'pat-test-token', baseId: 'appTEST', fetch, sleep, random: extra.random });
+  return { client, fetch, sleep };
 }
 
 describe('listAllRecords', () => {
@@ -65,5 +68,65 @@ describe('updateRecords', () => {
     const { client, fetch } = setup();
     await client.updateRecords('tblGuests', []);
     expect(fetch).not.toHaveBeenCalled();
+  });
+});
+
+describe('retries', () => {
+  it('retries a 429 and succeeds on the second attempt', async () => {
+    const { client, fetch, sleep } = setup([json({ error: { type: 'RATE_LIMITED' } }, 429), json({ records: [] })]);
+    await client.listAllRecords('tblGuests', []);
+    expect(fetch).toHaveBeenCalledTimes(2);
+    expect(sleep).toHaveBeenCalledTimes(1);
+  });
+
+  it('honors a numeric Retry-After header (capped, no jitter added)', async () => {
+    const { client, sleep } = setup([
+      json({ error: { type: 'RATE_LIMITED' } }, 429, { 'Retry-After': '2' }),
+      json({ records: [] }),
+    ]);
+    await client.listAllRecords('tblGuests', []);
+    expect(sleep).toHaveBeenCalledWith(2000);
+  });
+
+  it('throws after MAX_RETRIES exhausted on repeated 500s, including the status in the message', async () => {
+    const { client, fetch } = setup([
+      json({}, 500),
+      json({}, 500),
+      json({}, 500),
+      json({}, 500),
+      json({ records: [] }),
+    ]);
+    const error = await client.listAllRecords('tblGuests', []).catch((caught: unknown) => caught);
+    expect(error).toBeInstanceOf(Error);
+    expect((error as Error).message).toContain('500');
+    expect(fetch).toHaveBeenCalledTimes(4);
+  });
+
+  it('does not retry a non-retryable 4xx and does not sleep', async () => {
+    const { client, fetch, sleep } = setup([json({ error: { type: 'INVALID' } }, 422)]);
+    const error = await client.listAllRecords('tblGuests', []).catch((caught: unknown) => caught);
+    expect(error).toBeInstanceOf(Error);
+    expect((error as Error).message).toContain('422');
+    expect(fetch).toHaveBeenCalledTimes(1);
+    expect(sleep).not.toHaveBeenCalled();
+  });
+
+  it('retries a thrown network error and succeeds', async () => {
+    const responses = [json({ records: [] })];
+    const fetch = vi.fn<FetchLike>(async () => {
+      if (fetch.mock.calls.length === 1) throw new TypeError('network error');
+      return responses.shift() ?? json({ records: [] });
+    });
+    const sleep = vi.fn(async () => {});
+    const client = createAirtableClient({ token: 'pat-test-token', baseId: 'appTEST', fetch, sleep });
+    await client.listAllRecords('tblGuests', []);
+    expect(fetch).toHaveBeenCalledTimes(2);
+    expect(sleep).toHaveBeenCalledTimes(1);
+  });
+
+  it('gives every request attempt an abort signal', async () => {
+    const { client, fetch } = setup([json({ records: [] })]);
+    await client.listAllRecords('tblGuests', []);
+    expect(fetch.mock.calls[0][1]?.signal).toBeInstanceOf(AbortSignal);
   });
 });

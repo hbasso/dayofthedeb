@@ -52,7 +52,7 @@ export function toInvitations(
         return guest && guest.name ? [guest] : [];
       }),
     }))
-    .sort((a, b) => a.household.localeCompare(b.household));
+    .sort((a, b) => a.household.localeCompare(b.household, 'en'));
 }
 
 export async function fetchInvitations(client: AirtableClient): Promise<Invitation[]> {

@@ -22,23 +22,77 @@ const API_ROOT = 'https://api.airtable.com/v0';
 const PAGE_SIZE = 100; // Airtable maximum
 export const UPDATE_BATCH_SIZE = 10; // Airtable maximum per PATCH
 
+export const MAX_RETRIES = 3;
+export const BASE_RETRY_DELAY_MS = 500;
+export const REQUEST_TIMEOUT_MS = 10_000;
+const MAX_RETRY_AFTER_MS = 30_000;
+const MAX_JITTER_MS = 250;
+
 interface ListPage {
   records: AirtableRecord[];
   offset?: string;
 }
 
-export function createAirtableClient(options: { token: string; baseId: string; fetch?: FetchLike }): AirtableClient {
+function defaultSleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function isRetryableStatus(status: number): boolean {
+  return status === 429 || status >= 500;
+}
+
+/** Delay before retry attempt n (1-based). Retry-After (seconds) wins when present, capped; otherwise exponential backoff plus jitter. */
+function retryDelayMs(attempt: number, retryAfterHeader: string | null, random: () => number): number {
+  const retryAfterSeconds = retryAfterHeader === null ? NaN : Number(retryAfterHeader);
+  if (Number.isFinite(retryAfterSeconds)) {
+    return Math.min(retryAfterSeconds * 1000, MAX_RETRY_AFTER_MS);
+  }
+  const backoff = BASE_RETRY_DELAY_MS * 2 ** (attempt - 1);
+  return backoff + random() * MAX_JITTER_MS;
+}
+
+export function createAirtableClient(options: {
+  token: string;
+  baseId: string;
+  fetch?: FetchLike;
+  sleep?: (ms: number) => Promise<void>;
+  random?: () => number;
+}): AirtableClient {
   const doFetch = options.fetch ?? fetch;
+  const sleep = options.sleep ?? defaultSleep;
+  const random = options.random ?? Math.random;
   const headers = { Authorization: `Bearer ${options.token}`, 'Content-Type': 'application/json' };
 
   async function request<T>(tablePath: string, init: RequestInit = {}): Promise<T> {
-    const response = await doFetch(`${API_ROOT}/${options.baseId}/${tablePath}`, { ...init, headers });
-    if (!response.ok) {
-      const detail = (await response.text()).slice(0, 300);
-      const table = tablePath.split('?')[0];
-      throw new Error(`Airtable ${init.method ?? 'GET'} ${table} failed with ${response.status}: ${detail}`);
+    let lastError: unknown;
+    for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+      let response: Response;
+      try {
+        response = await doFetch(`${API_ROOT}/${options.baseId}/${tablePath}`, {
+          ...init,
+          headers,
+          signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+        });
+      } catch (error) {
+        lastError = error;
+        if (attempt >= MAX_RETRIES) throw error;
+        await sleep(retryDelayMs(attempt + 1, null, random));
+        continue;
+      }
+
+      if (!response.ok) {
+        if (isRetryableStatus(response.status) && attempt < MAX_RETRIES) {
+          await sleep(retryDelayMs(attempt + 1, response.headers.get('Retry-After'), random));
+          continue;
+        }
+        const detail = (await response.text()).slice(0, 300);
+        const table = tablePath.split('?')[0];
+        throw new Error(`Airtable ${init.method ?? 'GET'} ${table} failed with ${response.status}: ${detail}`);
+      }
+
+      return (await response.json()) as T;
     }
-    return (await response.json()) as T;
+    throw lastError;
   }
 
   return {

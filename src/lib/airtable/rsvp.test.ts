@@ -8,6 +8,7 @@ import {
   RsvpValidationError,
   writeRsvp,
 } from '@/lib/airtable/rsvp';
+import type { RsvpAnswer } from '@/lib/airtable/rsvp';
 import type { Invitation } from '@/types/domain';
 
 const G = AIRTABLE.guests.fields;
@@ -64,6 +65,31 @@ describe('buildRsvpUpdates', () => {
 
   it('rejects an overlong plus-one name', () => {
     const answers = [{ guestId: 'recGrant', attending: 'yes' as const, plusOneName: 'x'.repeat(MAX_PLUS_ONE_NAME_LENGTH + 1) }];
+    expect(() => buildRsvpUpdates(invitation, answers, DAY)).toThrow(RsvpValidationError);
+  });
+
+  it('rejects a non-array answers value', () => {
+    expect(() => buildRsvpUpdates(invitation, { guestId: 'recGrant' } as unknown as RsvpAnswer[], DAY)).toThrow(
+      RsvpValidationError,
+    );
+  });
+
+  it('rejects a null answer', () => {
+    expect(() => buildRsvpUpdates(invitation, [null] as unknown as RsvpAnswer[], DAY)).toThrow(RsvpValidationError);
+  });
+
+  it('rejects a non-object answer', () => {
+    expect(() => buildRsvpUpdates(invitation, ['nope'] as unknown as RsvpAnswer[], DAY)).toThrow(RsvpValidationError);
+  });
+
+  it('rejects a non-string guestId', () => {
+    expect(() => buildRsvpUpdates(invitation, [{ guestId: 123, attending: 'yes' }] as unknown as RsvpAnswer[], DAY)).toThrow(
+      RsvpValidationError,
+    );
+  });
+
+  it('rejects a non-string plusOneName', () => {
+    const answers = [{ guestId: 'recGrant', attending: 'yes', plusOneName: 42 }] as unknown as RsvpAnswer[];
     expect(() => buildRsvpUpdates(invitation, answers, DAY)).toThrow(RsvpValidationError);
   });
 });
