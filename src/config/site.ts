@@ -9,6 +9,8 @@ export interface SiteConfig {
   eventStartsAt: string | null;
   /** ISO 8601 date, e.g. "2026-11-15". null until the host confirms. */
   rsvpDeadline: string | null;
+  /** IANA time zone of the event; used for date-only fields like Responded At. */
+  timeZone: string;
 }
 
 export const siteConfig: SiteConfig = {
@@ -20,4 +22,5 @@ export const siteConfig: SiteConfig = {
   },
   eventStartsAt: null,
   rsvpDeadline: null,
+  timeZone: 'America/Chicago',
 };
