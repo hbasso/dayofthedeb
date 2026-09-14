@@ -21,10 +21,24 @@ export function getAuthSecret(): string {
 
 export const MIN_ADMIN_PASSWORD_LENGTH = 12;
 
+/**
+ * Same normalization as `normalizeSitePassword` in `src/lib/auth.ts` (trim + lowercase), inlined
+ * here rather than imported: that module is `server-only` and this file must stay proxy-safe.
+ */
+function normalizeForComparison(value: string): string {
+  return value.trim().toLowerCase();
+}
+
 export function getAdminPassword(): string {
   const password = readRequiredEnv('ADMIN_PASSWORD');
   if (password.length < MIN_ADMIN_PASSWORD_LENGTH) {
     throw new Error(`ADMIN_PASSWORD must be at least ${MIN_ADMIN_PASSWORD_LENGTH} characters`);
   }
+
+  const sitePassword = process.env.SITE_PASSWORD;
+  if (sitePassword && normalizeForComparison(password) === normalizeForComparison(sitePassword)) {
+    throw new Error('ADMIN_PASSWORD must differ from SITE_PASSWORD');
+  }
+
   return password;
 }

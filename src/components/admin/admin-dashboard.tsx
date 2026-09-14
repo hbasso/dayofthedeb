@@ -27,7 +27,9 @@ export async function AdminDashboard() {
         <a href={airtableUrl} target="_blank" rel="noopener noreferrer" className="text-link underline-offset-4 hover:underline">
           Edit guests in Airtable
         </a>{' '}
-        <span className="text-muted-foreground">(changes show here after “Refresh from Airtable” or within about 5 minutes)</span>
+        <span className="text-muted-foreground">
+          (changes show here after &ldquo;Refresh from Airtable&rdquo;, or within a few minutes)
+        </span>
       </p>
     </div>
   );

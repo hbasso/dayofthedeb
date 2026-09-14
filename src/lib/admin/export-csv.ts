@@ -34,6 +34,43 @@ export function toGuestListRows(rows: readonly GuestRow[]): string[][] {
   ]);
 }
 
+const FORMULA_TRIGGER_CODES = [
+  '='.charCodeAt(0),
+  '+'.charCodeAt(0),
+  '-'.charCodeAt(0),
+  '@'.charCodeAt(0),
+];
+const SPACE_CODE = 32;
+const TAB_CODE = 9;
+const CR_CODE = 13;
+const LF_CODE = 10;
+
+/**
+ * Prefixes a single quote when a spreadsheet would interpret the cell as a formula.
+ * papaparse's own `escapeFormulae` uses a regex whose `.*$` doesn't match across a line
+ * break, so a guest-typed value like `=1+1` followed by a newline slips through unescaped.
+ * This pure check walks char codes instead, so it works regardless of embedded newlines.
+ */
+export function neutralizeCell(value: string): string {
+  if (value.length === 0) return value;
+  const firstCode = value.charCodeAt(0);
+  if (firstCode === TAB_CODE || firstCode === CR_CODE || firstCode === LF_CODE) {
+    return `'${value}`;
+  }
+
+  let index = 0;
+  while (index < value.length && value.charCodeAt(index) === SPACE_CODE) {
+    index += 1;
+  }
+  if (index >= value.length) return value;
+
+  const firstNonSpaceCode = value.charCodeAt(index);
+  return FORMULA_TRIGGER_CODES.includes(firstNonSpaceCode) ? `'${value}` : value;
+}
+
 export function toCsv(columns: readonly string[], rows: readonly (readonly string[])[]): string {
-  return Papa.unparse({ fields: [...columns], data: rows.map((row) => [...row]) }, { escapeFormulae: true });
+  return Papa.unparse({
+    fields: [...columns],
+    data: rows.map((row) => row.map((cell) => neutralizeCell(cell))),
+  });
 }

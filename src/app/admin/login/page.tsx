@@ -1,7 +1,10 @@
 import type { Metadata } from 'next';
+import { redirect } from 'next/navigation';
 import { Suspense } from 'react';
 import { AdminLoginForm } from '@/components/auth/admin-login-form';
 import { siteConfig } from '@/config/site';
+import { getAdminSession } from '@/lib/auth';
+import { safeAdminNextPath } from '@/lib/routes';
 
 export const metadata: Metadata = {
   title: `Admin sign in · ${siteConfig.name}`,
@@ -24,6 +27,8 @@ export default function AdminLoginPage({ searchParams }: PageProps<'/admin/login
 }
 
 async function AdminLoginFormWithNext({ searchParams }: Pick<PageProps<'/admin/login'>, 'searchParams'>) {
+  const session = await getAdminSession();
   const { next } = await searchParams;
+  if (session.admin === true) redirect(safeAdminNextPath(next));
   return <AdminLoginForm next={typeof next === 'string' ? next : '/admin'} />;
 }

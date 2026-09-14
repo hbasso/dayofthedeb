@@ -32,6 +32,17 @@ beforeEach(() => {
 });
 
 describe('adminLogin', () => {
+  it('reports a setup error and does not save a session when ADMIN_PASSWORD is missing or too short', async () => {
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
+    vi.stubEnv('ADMIN_PASSWORD', 'short');
+    expect(await adminLogin({}, form({ password: ADMIN_PASSWORD }))).toEqual({
+      error: 'Admin sign-in is not set up yet. Check ADMIN_PASSWORD.',
+    });
+    expect(mocks.session.save).not.toHaveBeenCalled();
+    expect(consoleError).toHaveBeenCalledWith('admin sign-in misconfigured', expect.any(Error));
+    consoleError.mockRestore();
+  });
+
   it('rejects a wrong password without creating a session', async () => {
     expect(await adminLogin({}, form({ password: 'wrong-password-here' }))).toEqual({
       error: expect.stringContaining('admin password'),

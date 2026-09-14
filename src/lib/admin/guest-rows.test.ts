@@ -2,11 +2,13 @@ import { describe, expect, it } from 'vitest';
 import { INVITATIONS } from '@/lib/admin/fixtures';
 import {
   filterGuestRows,
+  filterIndexedRows,
   findDuplicateNames,
   NO_FILTERS,
   toGuestRows,
   toHouseholdOptions,
   toStatusFilter,
+  withSearchKeys,
 } from '@/lib/admin/guest-rows';
 import type { Invitation } from '@/types/domain';
 
@@ -73,6 +75,19 @@ describe('filterGuestRows', () => {
 
   it('combines filters', () => {
     expect(names(filterGuestRows(rows, { status: 'attending', invitationId: id('Biggs'), query: '' }))).toEqual(['Grant Biggs']);
+  });
+});
+
+describe('withSearchKeys / filterIndexedRows', () => {
+  it('produces the same results as filterGuestRows for equivalent filters', () => {
+    const indexed = withSearchKeys(rows);
+    const filters = { ...NO_FILTERS, query: 'priya' };
+    expect(names(filterIndexedRows(indexed, filters))).toEqual(names(filterGuestRows(rows, filters)));
+  });
+
+  it('matches on the precomputed key ignoring case and accents', () => {
+    const indexed = withSearchKeys(rows);
+    expect(names(filterIndexedRows(indexed, { ...NO_FILTERS, query: 'SOFIA' }))).toEqual(['Sofía Reyes']);
   });
 });
 

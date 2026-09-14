@@ -6,6 +6,19 @@ describe('storedPlusOneName', () => {
     expect(storedPlusOneName(true, 'yes', '  Priya Raman ')).toBe('Priya Raman');
   });
 
+  it('turns embedded control characters into a single space', () => {
+    const withLf = 'Priya' + String.fromCharCode(10) + 'Raman';
+    const withTab = 'Priya' + String.fromCharCode(9) + 'Raman';
+    const withCr = 'Priya' + String.fromCharCode(13) + 'Raman';
+    expect(storedPlusOneName(true, 'yes', withLf)).toBe('Priya Raman');
+    expect(storedPlusOneName(true, 'yes', withTab)).toBe('Priya Raman');
+    expect(storedPlusOneName(true, 'yes', withCr)).toBe('Priya Raman');
+  });
+
+  it('collapses runs of whitespace and trims the ends', () => {
+    expect(storedPlusOneName(true, 'yes', '  Priya   Raman  ')).toBe('Priya Raman');
+  });
+
   it('clears the name when the guest is not attending', () => {
     expect(storedPlusOneName(true, 'no', 'Priya Raman')).toBeNull();
   });

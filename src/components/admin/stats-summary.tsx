@@ -24,7 +24,7 @@ export function StatsSummary({ stats }: { stats: ResponseStats }) {
       detail: `of ${stats.plusOnesOffered} offered`,
     },
     {
-      label: 'Last 7 days',
+      label: 'Households active in last 7 days',
       value: `${stats.householdsRespondedLast7Days} ${stats.householdsRespondedLast7Days === 1 ? 'household' : 'households'}`,
       detail: lastResponse ? `Latest response ${lastResponse}` : 'No responses yet',
     },

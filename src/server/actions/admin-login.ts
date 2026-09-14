@@ -10,8 +10,16 @@ export interface AdminLoginState {
 }
 
 export async function adminLogin(_prev: AdminLoginState, formData: FormData): Promise<AdminLoginState> {
+  let adminPassword: string;
+  try {
+    adminPassword = getAdminPassword();
+  } catch (error) {
+    console.error('admin sign-in misconfigured', error);
+    return { error: 'Admin sign-in is not set up yet. Check ADMIN_PASSWORD.' };
+  }
+
   const input = formData.get('password');
-  if (typeof input !== 'string' || !passwordsMatch(input, getAdminPassword())) {
+  if (typeof input !== 'string' || !passwordsMatch(input, adminPassword)) {
     return { error: "That admin password isn't right." };
   }
 

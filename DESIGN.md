@@ -195,7 +195,7 @@ Everything lives under a single `/admin` page behind the admin password (Layer 3
 The page has four parts:
 
 - **Guest table.** The whole list, rendered from the cache, with attending status, plus-one, and response state per guest. Filtering is client-side: by attending / declined / no-response, by household, and a name search. Because the full list is already cached, all filtering is instant and hits no API, so the admin never waits on Airtable. If the row count ever feels heavy in the DOM, virtualize or client-paginate the rendered rows; this is a UI nicety, not an API concern.
-- **Download CSV button.** Two downloads from /api/export. The headcount CSV (default) has one row per person coming: Name, Household, Type (Guest or Plus-one), Guest Of, Responded; its row count equals the headcount. The full guest list CSV (?scope=all) has every guest with Status and counted Plus One. Both neutralize spreadsheet formulas and include a UTF-8 byte-order mark for Excel.
+- **Download CSV button.** Two downloads from /api/export. The headcount CSV (default) has one row per person coming: Name, Household, Type (Guest or Plus-one), Guest Of, Responded; its row count equals the headcount. The full guest list CSV (?scope=all) has every guest with Status and counted Plus One. Both neutralize spreadsheet formulas per cell (`neutralizeCell` in `lib/admin/export-csv.ts`, covering values with embedded line breaks) and include a UTF-8 byte-order mark for Excel. Plus-one names are whitespace-normalized on write (`lib/plus-one.ts`), so a guest-typed newline or tab never reaches the stored name or the export.
 - **Stats summary (top).** A headline number and a few supporting stats, all computed in the app from the cached list. No Airtable rollups. See below.
 - **Link to Airtable (bottom).** A link to the base in Airtable, for when the host wants to edit directly. This is the base link, gated by Airtable's own collaborator auth, not a public shared-view link. A visitor who is not an invited Airtable collaborator hits Airtable's permission wall, so the link exposes nothing even though the admin page itself is only password-protected.
 
@@ -354,7 +354,6 @@ src/
 │  ├─ session.ts                    # iron-session options + seal check (proxy-safe)
 │  ├─ env.ts                        # lazy env getters (proxy-safe; no Airtable token here)
 │  ├─ routes.ts                     # pure: public paths, safe redirect
-│  ├─ csv.ts                        # unpivot -> CSV/xlsx
 │  ├─ admin/
 │  │  ├─ stats.ts                   # pure: computeStats (response summary numbers)
 │  │  ├─ guest-rows.ts              # pure: guest table rows, filters, duplicate-name check
@@ -395,7 +394,7 @@ src/
 - The fetch must page through the Airtable list endpoint, which returns at most 100 records per request plus an `offset` token for the next page. Loop until no offset comes back, or the cache will silently hold only the first 100 guests. At ~1,050 records that is ~11 sequential requests inside the 5-per-second per-base limit, and it runs once per revalidation, not per page view.
 - Reads (search, roster, admin, export) all draw from this cached list.
 - `submit-rsvp` calls `updateTag('guests')` after writing, so a guest who re-searches to edit sees their own update.
-- Host edits made directly in Airtable surface on the next revalidation window (a few minutes is acceptable). Optionally add a manual "refresh" affordance on the admin page that calls `revalidateTag('guests', 'max')`.
+- Host edits made directly in Airtable surface on the next revalidation window (a few minutes is acceptable). Optionally add a manual "refresh" affordance on the admin page that calls `updateTag('guests')` (admin-only server action).
 
 ---
 

@@ -58,14 +58,33 @@ export function toHouseholdOptions(invitations: readonly Invitation[]): Househol
   return invitations.map((invitation) => ({ id: invitation.id, household: invitation.household }));
 }
 
-export function filterGuestRows(rows: readonly GuestRow[], filters: GuestFilters): GuestRow[] {
-  const query = normalizeName(filters.query);
-  return rows.filter(
-    (row) =>
-      (filters.status === 'all' || row.status === filters.status) &&
-      (filters.invitationId === '' || row.invitationId === filters.invitationId) &&
-      (query === '' || normalizeName(`${row.name} ${row.plusOneName ?? ''}`).includes(query)),
+export interface IndexedGuestRow {
+  row: GuestRow;
+  /** Normalized "name plus-one" search key, precomputed once so filtering never re-normalizes per keystroke. */
+  key: string;
+}
+
+/** Precomputes each row's normalized search key once, so the table filters instead of re-normalizing per row on every filter change. */
+export function withSearchKeys(rows: readonly GuestRow[]): IndexedGuestRow[] {
+  return rows.map((row) => ({ row, key: normalizeName(`${row.name} ${row.plusOneName ?? ''}`) }));
+}
+
+function matchesFilters(row: GuestRow, key: string, filters: GuestFilters, query: string): boolean {
+  return (
+    (filters.status === 'all' || row.status === filters.status) &&
+    (filters.invitationId === '' || row.invitationId === filters.invitationId) &&
+    (query === '' || key.includes(query))
   );
+}
+
+/** Same result as `filterGuestRows`, but takes precomputed search keys (see `withSearchKeys`). */
+export function filterIndexedRows(indexed: readonly IndexedGuestRow[], filters: GuestFilters): GuestRow[] {
+  const query = normalizeName(filters.query);
+  return indexed.filter(({ row, key }) => matchesFilters(row, key, filters, query)).map(({ row }) => row);
+}
+
+export function filterGuestRows(rows: readonly GuestRow[], filters: GuestFilters): GuestRow[] {
+  return filterIndexedRows(withSearchKeys(rows), filters);
 }
 
 export interface DuplicateName {

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   GUEST_LIST_COLUMNS,
   HEADCOUNT_COLUMNS,
+  neutralizeCell,
   toCsv,
   toGuestListRows,
   toHeadcountRows,
@@ -38,6 +39,36 @@ describe('toGuestListRows', () => {
   });
 });
 
+describe('neutralizeCell', () => {
+  it('prefixes a leading = with a single quote', () => {
+    expect(neutralizeCell('=HYPERLINK("x")')).toBe(`'=HYPERLINK("x")`);
+  });
+
+  it('neutralizes a formula-looking value that carries a line break', () => {
+    const value = '=1+1' + String.fromCharCode(10) + 'x';
+    expect(neutralizeCell(value)).toBe(`'${value}`);
+  });
+
+  it('neutralizes when the first non-space character is a formula trigger', () => {
+    expect(neutralizeCell('  =1')).toBe(`'  =1`);
+  });
+
+  it('neutralizes -, +, and @ triggers', () => {
+    expect(neutralizeCell('-5')).toBe("'-5");
+    expect(neutralizeCell('+1')).toBe("'+1");
+    expect(neutralizeCell('@x')).toBe("'@x");
+  });
+
+  it('leaves ordinary names unchanged', () => {
+    expect(neutralizeCell('Sofía Reyes')).toBe('Sofía Reyes');
+    expect(neutralizeCell("O'Brien")).toBe("O'Brien");
+  });
+
+  it('neutralizes a leading tab', () => {
+    expect(neutralizeCell(String.fromCharCode(9) + 'x')).toBe(`'${String.fromCharCode(9)}x`);
+  });
+});
+
 describe('toCsv', () => {
   it('writes a header row and CRLF line endings', () => {
     const lines = toCsv(HEADCOUNT_COLUMNS, [['Sue Musgrove', 'The Musgroves', 'Guest', '', '2026-09-14']]).split(CRLF);
@@ -53,5 +84,12 @@ describe('toCsv', () => {
     const csv = toCsv(HEADCOUNT_COLUMNS, [['=HYPERLINK("x")', 'H', 'Plus-one', 'Grant Biggs', '']]);
     expect(csv).toContain(`"'=HYPERLINK(""x"")"`);
     expect(csv).not.toContain(`,=HYPERLINK`);
+  });
+
+  it('neutralizes a formula value that carries a line break', () => {
+    const value = '=1+1' + String.fromCharCode(10) + 'x';
+    const csv = toCsv(HEADCOUNT_COLUMNS, [[value, 'H', 'Plus-one', 'Grant Biggs', '']]);
+    // The neutralized, still-multiline cell survives quoted, with its embedded LF intact.
+    expect(csv).toContain(`"'=1+1${String.fromCharCode(10)}x"`);
   });
 });
