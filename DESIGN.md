@@ -176,6 +176,8 @@ The visual flow is demonstrated in the standalone HTML prototype delivered earli
 
 The entire sequence above happens on `/rsvp`; there is no `/rsvp/[household]` URL. `rsvp/page.tsx` is a thin server shell that renders a client `rsvp-flow.tsx`, which owns the current step (search, results, roster, confirmation) in local state. The matched households and their rosters come back from the `searchGuests` server action and are held in that state, so selecting a household is a state change, not a navigation. This is the one place the app leans client-side rather than server-first, which is appropriate for a short multi-step wizard. The server-only data boundary still holds, because every read and write goes through a server action, never a direct Airtable call from the client.
 
+Server actions return a RosterHousehold projection (id, household, and per guest: id, name, hasPlusOne, attending, plusOneName); contact emails, alt names, and response dates never reach the browser. submitRsvp requires exactly one answer per guest on the invitation.
+
 ### Name matching
 
 Normalize both the query and the stored names before comparing: lowercase, strip accents, trim, and include the `altNames` list. This handles accents (Héctor vs Hector), nicknames (Sue vs Susan), and casing. Implemented as pure functions in `lib/search.ts`.
@@ -345,6 +347,11 @@ src/
 │  ├─ env.ts                        # lazy env getters (proxy-safe; no Airtable token here)
 │  ├─ routes.ts                     # pure: public paths, safe redirect
 │  ├─ csv.ts                        # unpivot -> CSV/xlsx
+│  ├─ plus-one.ts                   # shared plus-one rule
+│  ├─ roster-view.ts                # RosterHousehold projection sent to the browser
+│  ├─ roster-state.ts               # pure roster reducer, headcount, validation
+│  ├─ rsvp-input.ts                 # parses untrusted submit input
+│  ├─ dates.ts                      # date formatting
 │  └─ utils.ts                      # cn(), shadcn helpers
 ├─ server/actions/
 │  ├─ unlock-site.ts                # 'use server': validate site password, set cookie
@@ -352,7 +359,9 @@ src/
 │  ├─ search-guests.ts              # 'use server': search cached list, return matches
 │  └─ submit-rsvp.ts                # 'use server': validate, upsert (first RSVP or edit), revalidateTag
 ├─ proxy.ts                         # Layer 1 + Layer 3 cookie gates (Next 16 middleware)
-├─ types/domain.ts                  # Invitation, Guest, Attendance
+├─ types/
+│  ├─ domain.ts                     # Invitation, Guest, Attendance
+│  └─ rsvp.ts                       # client-safe RSVP types and action results
 └─ config/
    ├─ site.ts                       # event name, date, venue, deadline (one source)
    └─ directions.ts                 # typed arrival, parking, wayfinding content

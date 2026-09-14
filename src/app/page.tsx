@@ -1,4 +1,5 @@
-import { Button } from '@/components/ui/button';
+import Link from 'next/link';
+import { buttonVariants } from '@/components/ui/button';
 import { siteConfig } from '@/config/site';
 
 const swatches = ['bg-primary', 'bg-secondary', 'bg-link', 'bg-success', 'bg-turquoise', 'bg-sunny', 'bg-foreground'];
@@ -16,7 +17,9 @@ export default function HomePage() {
           <span key={swatch} className={`size-8 rounded-full ${swatch}`} />
         ))}
       </div>
-      <Button size="lg">RSVP opens soon</Button>
+      <Link href="/rsvp" className={buttonVariants({ size: 'lg', className: 'h-12 px-8 text-base' })}>
+        RSVP
+      </Link>
     </main>
   );
 }
