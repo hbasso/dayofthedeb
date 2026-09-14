@@ -395,7 +395,7 @@ Resolved: the plus-one model. A plus-one is a `Has Plus One` checkbox (host elig
 
 1. **Scaffold.** Next + TS + Tailwind v4, `shadcn init`, theme tokens and `ThemeProvider`, `config/site.ts`, domain types.
 2. **Data layer.** Airtable client, read/write mappers, `guest-list` cache, pure `search` module with unit tests.
-3. **Site gate (Layer 1).** `middleware.ts`, `/unlock`, `unlock-site` action, cookie signing in `lib/auth`.
+3. **Site gate (Layer 1).** `proxy.ts`, `/unlock`, `unlock-site` action, cookie signing in `lib/auth`.
 4. **RSVP flow.** Search action and form, results, roster with conditional plus-one, submit action (upsert), confirmation. The returning-guest edit is the same flow: the roster hydrates from current answers and resubmitting overwrites them, so it needs no extra work beyond that hydration.
 5. **Admin (Layer 3), stats, and export.** Admin login, admin page with the computed stats summary and the filterable guest table, guarded export route with CSV unpivot.
 6. **Content pages.** The landing page (event basics, gallery, links) and the venue page (overview, map, and the getting-here section: arrival options, parking, wayfinding, accessibility). Static / ISR, content from `config`.
