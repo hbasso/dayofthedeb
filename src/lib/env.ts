@@ -19,7 +19,7 @@ export function getAuthSecret(): string {
   return secret;
 }
 
-export const MIN_ADMIN_PASSWORD_LENGTH = 12;
+export const MIN_ADMIN_PASSWORD_LENGTH = 4;
 
 /**
  * Same normalization as `normalizeSitePassword` in `src/lib/auth.ts` (trim + lowercase), inlined

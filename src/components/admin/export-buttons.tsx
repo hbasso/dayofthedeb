@@ -15,7 +15,10 @@ export function ExportButtons() {
         </a>
       </div>
       <p className="text-sm text-muted-foreground">
-        The headcount file has one row per person coming, plus-ones included, for the caterer and venue. The full list has
+        The headcount file has one row per person coming, plus-ones included, best for the venue. 
+      </p>
+      <p className="text-sm text-muted-foreground">
+        The full list has
         every guest and their response.
       </p>
     </section>
