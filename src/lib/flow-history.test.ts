@@ -76,6 +76,14 @@ class FlowSim {
     this.step = 'search';
     this.query = query;
   }
+
+  /** Simulate the mount effect re-running (e.g. Next `<Activity>` re-showing the route). */
+  mount(stateIndex: number) {
+    const { model, action } = planMount(this.model, stateIndex);
+    this.model = model;
+    if (action.kind === 'go') this.go(action.delta);
+    else if (action.kind === 'applyReset' && !action.silent) this.showSearch(action.query);
+  }
 }
 
 describe('flow history', () => {
@@ -213,5 +221,39 @@ describe('flow history', () => {
     expect(planMount(first.model, 2).action).toEqual({ kind: 'none' });
     expect(planPop(first.model, 'search', 0).action).toEqual({ kind: 'applyReset', query: '', silent: true });
     expect(planMount(initialFlowHistory(), 0).action).toEqual({ kind: 'none' });
+  });
+
+  it('Activity re-show at a matching index is a no-op', () => {
+    const sim = new FlowSim();
+    sim.forward('roster');
+    const before = sim.model;
+    sim.mount(1);
+    expect(sim.model).toEqual(before);
+    expect(sim.step).toBe('roster');
+    sim.back();
+    expect(sim.step).toBe('search');
+    sim.back();
+    expect(sim.left).toBe(true);
+  });
+
+  it('Multi-match Activity re-show is a no-op', () => {
+    const sim = new FlowSim();
+    sim.forward('results');
+    sim.forward('roster');
+    const before = sim.model;
+    sim.mount(2);
+    expect(sim.model).toEqual(before);
+    expect(sim.step).toBe('roster');
+    sim.back();
+    expect(sim.step).toBe('results');
+    sim.back();
+    expect(sim.step).toBe('search');
+  });
+
+  it('Mismatch re-show resets visibly', () => {
+    const model: FlowHistory = { currentIndex: 2, entrySteps: ['search', 'results', 'roster'], pendingReset: null };
+    const { model: nextModel, action } = planMount(model, 1);
+    expect(nextModel).toEqual(initialFlowHistory());
+    expect(action).toEqual({ kind: 'applyReset', query: '', silent: false });
   });
 });

@@ -61,13 +61,21 @@ export function planReset(model: FlowHistory, query: string): { model: FlowHisto
   };
 }
 
-/** On mount: if the page was reloaded on a flow entry, silently rewind to the original entry. */
+/**
+ * On mount: if the page was reloaded on a flow entry, silently rewind to the original entry.
+ * With `cacheComponents`, this can also run when Next re-shows a cached route inside
+ * `<Activity>` instead of a fresh load, so a matching index is a no-op (the screen and
+ * history already agree), and a mismatched one resets visibly instead of silently.
+ */
 export function planMount(model: FlowHistory, stateIndex: number): { model: FlowHistory; action: HistoryAction } {
-  if (stateIndex === 0 || model.pendingReset) return { model, action: { kind: 'none' } };
-  return {
-    model: { ...model, currentIndex: stateIndex, pendingReset: { query: '', silent: true } },
-    action: { kind: 'go', delta: -stateIndex },
-  };
+  if (model.pendingReset || stateIndex === model.currentIndex) return { model, action: { kind: 'none' } };
+  if (model.currentIndex === 0) {
+    return {
+      model: { ...model, currentIndex: stateIndex, pendingReset: { query: '', silent: true } },
+      action: { kind: 'go', delta: -stateIndex },
+    };
+  }
+  return { model: AT_START, action: { kind: 'applyReset', query: '', silent: false } };
 }
 
 /** A `popstate` landed on the entry stamped `targetIndex` while `step` is on screen. */

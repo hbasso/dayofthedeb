@@ -10,7 +10,7 @@ import {
   planReset,
   type EntryStep,
   type FlowStep,
-}from '@/lib/flow-history';
+} from '@/lib/flow-history';
 
 interface FlowHistoryOptions {
   /** The step currently on screen. */
@@ -47,6 +47,7 @@ export function useFlowHistory(options: FlowHistoryOptions) {
     const mounted = planMount(modelRef.current, historyIndexOf(window.history.state));
     modelRef.current = mounted.model;
     if (mounted.action.kind === 'go') window.history.go(mounted.action.delta);
+    else if (mounted.action.kind === 'applyReset' && !mounted.action.silent) optionsRef.current.onReset(mounted.action.query);
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
