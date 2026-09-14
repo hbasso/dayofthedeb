@@ -65,7 +65,7 @@ describe('filterGuestRows', () => {
     ]);
   });
 
-  it('searches names, plus-ones, and households ignoring case and accents', () => {
+  it('searches names and plus-ones ignoring case and accents', () => {
     expect(names(filterGuestRows(rows, { ...NO_FILTERS, query: 'SOFIA' }))).toEqual(['Sofía Reyes']);
     expect(names(filterGuestRows(rows, { ...NO_FILTERS, query: 'priya' }))).toEqual(['Grant Biggs']);
     expect(names(filterGuestRows(rows, { ...NO_FILTERS, query: 'hunter' }))).toEqual(['Bill Hunter']);

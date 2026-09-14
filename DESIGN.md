@@ -139,9 +139,9 @@ Not a security boundary. Runs entirely behind Layer 1. Identifies which househol
 
 Protects the guest list and export from ordinary guests, all of whom hold the site password.
 
-- The proxy additionally requires a signed `admin_session` cookie for `/admin` and `/api/export`. The proxy must exempt `/admin/login` from the admin-cookie check to avoid a redirect loop.
-- `/admin/login` posts to an `adminLogin` server action validating `ADMIN_PASSWORD` (constant-time), setting a separate signed cookie.
-- The export route handler re-checks the admin cookie server-side. Never rely on the page's protection alone; the API must guard itself, or someone with the site password could fetch the CSV directly.
+- The proxy decides admin paths (/admin, /admin/*, /api/export) before the site gate. The admin password alone grants access (host decision): /admin/login is public, other admin pages redirect to /admin/login?next=…, and /api/export answers 401 without a valid admin_session cookie.
+- /admin/login posts to an adminLogin server action validating ADMIN_PASSWORD (exact, constant-time, at least 12 characters) and sets a sealed admin_session cookie (7 days). A site session never grants admin and vice versa.
+- requireAdminSession() runs before any admin data read and at the start of every admin server action; the export route validates the admin cookie itself.
 
 ### Security requirements
 
@@ -195,7 +195,7 @@ Everything lives under a single `/admin` page behind the admin password (Layer 3
 The page has four parts:
 
 - **Guest table.** The whole list, rendered from the cache, with attending status, plus-one, and response state per guest. Filtering is client-side: by attending / declined / no-response, by household, and a name search. Because the full list is already cached, all filtering is instant and hits no API, so the admin never waits on Airtable. If the row count ever feels heavy in the DOM, virtualize or client-paginate the rendered rows; this is a UI nicety, not an API concern.
-- **Download CSV button.** Calls `/api/export`, which unpivots the household model into one row per attending head (name, household, plus-one name if any, responded date) and returns a CSV via papaparse. Optionally xlsx via SheetJS. The export always reflects current data, so no one has to learn Airtable to get an up-to-date list.
+- **Download CSV button.** Two downloads from /api/export. The headcount CSV (default) has one row per person coming: Name, Household, Type (Guest or Plus-one), Guest Of, Responded; its row count equals the headcount. The full guest list CSV (?scope=all) has every guest with Status and counted Plus One. Both neutralize spreadsheet formulas and include a UTF-8 byte-order mark for Excel.
 - **Stats summary (top).** A headline number and a few supporting stats, all computed in the app from the cached list. No Airtable rollups. See below.
 - **Link to Airtable (bottom).** A link to the base in Airtable, for when the host wants to edit directly. This is the base link, gated by Airtable's own collaborator auth, not a public shared-view link. A visitor who is not an invited Airtable collaborator hits Airtable's permission wall, so the link exposes nothing even though the admin page itself is only password-protected.
 
@@ -205,6 +205,8 @@ All derived on the server from the cached list, a few `reduce`s over data alread
 
 - **People coming (headline).** Count guests with `attending === 'yes'`, then add one for each attending guest with a non-empty `plusOneName`. This is the caterer/venue headcount, and it is where the guest-plus-one combination is resolved.
 - **Response rate, by household.** Answered households over total households (a household counts as answered once any member has a non-null `attending`, or per your chosen rule). Households is the actionable denominator because the host chases families, not individuals. Plus-ones never enter this denominator: a plus-one does not RSVP, the named guest answers for them. Never divide by headcount, or the denominator grows as plus-ones arrive and the percentage misbehaves.
+- A household counts as responded once any member's attending is non-null.
+- **Duplicate names.** The admin page lists guest names that appear in more than one household so the host can make those household names easy to tell apart.
 - **Breakdown.** Yes / No / awaiting, as plain counts.
 - **Plus-ones.** How many are coming (attending guests with a filled `plusOneName`) out of how many were offered (guests with `hasPlusOne` checked). Fun, and it sanity-checks the headcount.
 - **Time-based (optional, free from `Responded At`).** Responses in the last 7 days, the date of the most recent RSVP, or a small response-over-time line.
@@ -326,9 +328,15 @@ src/
 │  │  ├─ wayfinding-steps.tsx       # numbered steps, garage to entrance
 │  │  └─ open-in-maps-button.tsx    # platform deep link; parking vs venue target
 │  ├─ admin/
+│  │  ├─ admin-dashboard.tsx        # composes header, stats, exports, duplicates, table (server)
+│  │  ├─ admin-header.tsx           # title + refresh + sign-out
+│  │  ├─ refresh-button.tsx         # client: calls refreshGuestList, then router.refresh()
 │  │  ├─ stats-summary.tsx          # headline headcount + response stats (computed)
-│  │  ├─ guest-table.tsx
-│  │  └─ export-button.tsx          # the download-CSV button
+│  │  ├─ export-buttons.tsx         # the download-CSV buttons (headcount + full list)
+│  │  ├─ duplicate-names.tsx        # same-name-in-multiple-households notice
+│  │  ├─ guest-table.tsx            # client: filterable guest table
+│  │  ├─ guest-table-filters.tsx    # client: search / status / household controls
+│  │  └─ status-badge.tsx           # attending / declined / awaiting pill
 │  ├─ auth/
 │  │  ├─ unlock-form.tsx            # client: site password entry
 │  │  └─ admin-login-form.tsx       # client: admin password entry
@@ -347,6 +355,10 @@ src/
 │  ├─ env.ts                        # lazy env getters (proxy-safe; no Airtable token here)
 │  ├─ routes.ts                     # pure: public paths, safe redirect
 │  ├─ csv.ts                        # unpivot -> CSV/xlsx
+│  ├─ admin/
+│  │  ├─ stats.ts                   # pure: computeStats (response summary numbers)
+│  │  ├─ guest-rows.ts              # pure: guest table rows, filters, duplicate-name check
+│  │  └─ export-csv.ts              # pure: rows -> CSV records for /api/export
 │  ├─ plus-one.ts                   # shared plus-one rule
 │  ├─ roster-view.ts                # RosterHousehold projection sent to the browser
 │  ├─ roster-state.ts               # pure roster reducer, headcount, validation
@@ -357,7 +369,8 @@ src/
 │  ├─ unlock-site.ts                # 'use server': validate site password, set cookie
 │  ├─ admin-login.ts                # 'use server': validate admin password, set cookie
 │  ├─ search-guests.ts              # 'use server': search cached list, return matches
-│  └─ submit-rsvp.ts                # 'use server': validate, upsert (first RSVP or edit), revalidateTag
+│  ├─ submit-rsvp.ts                # 'use server': validate, upsert (first RSVP or edit), revalidateTag
+│  └─ refresh-guest-list.ts         # 'use server': admin-only, updateTag(GUEST_LIST_TAG)
 ├─ proxy.ts                         # Layer 1 + Layer 3 cookie gates (Next 16 middleware)
 ├─ types/
 │  ├─ domain.ts                     # Invitation, Guest, Attendance
@@ -392,7 +405,7 @@ src/
 AIRTABLE_TOKEN=            # personal access token, scoped to the base
 AIRTABLE_BASE_ID=
 SITE_PASSWORD=            # shared, printed on the invitation
-ADMIN_PASSWORD=           # host + engineer only
+ADMIN_PASSWORD=           # admin area: host, planner, caterer (at least 12 characters)
 AUTH_SECRET=             # HMAC key for signing session cookies
 ```
 
