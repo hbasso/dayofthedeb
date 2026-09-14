@@ -1,26 +1,80 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+@custom-variant dark (&:is(.dark *));
 
 @theme inline {
+  --font-sans: var(--font-source-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-fraunces), ui-serif, Georgia, serif;
+
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-link: var(--link);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-turquoise: var(--turquoise);
+  --color-sunny: var(--sunny);
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+/* Fiesta palette (DESIGN.md §9). Retune colors here only. */
+:root {
+  --radius: 0.75rem;
+
+  --background: oklch(0.972 0.016 82.8); /* warm cream #FBF5EA */
+  --foreground: oklch(0.33 0.134 26.3); /* deep fiesta red #6A0008 */
+  --card: oklch(0.992 0.009 84.6); /* #FFFCF6 */
+  --card-foreground: oklch(0.33 0.134 26.3);
+  --popover: oklch(0.992 0.009 84.6);
+  --popover-foreground: oklch(0.33 0.134 26.3);
+
+  --primary: oklch(0.618 0.241 355.3); /* fiesta hot pink #E91E8C */
+  --primary-foreground: oklch(1 0 0);
+  --secondary: oklch(0.675 0.151 65.6); /* marigold #D48000 */
+  --secondary-foreground: oklch(0.33 0.134 26.3); /* ink, not white: white on marigold is 3.05:1 */
+  --accent: oklch(0.675 0.151 65.6);
+  --accent-foreground: oklch(0.33 0.134 26.3);
+
+  --muted: oklch(0.94 0.022 80.7); /* #F3EADB */
+  --muted-foreground: oklch(0.463 0.067 26.4); /* #7A4A45, 6.7:1 on cream */
+  --destructive: oklch(0.539 0.194 26.7); /* #C62828 */
+  --border: oklch(0.891 0.035 78.7); /* #E8D9C2 */
+  --input: oklch(0.891 0.035 78.7);
+  --ring: oklch(0.618 0.241 355.3);
+
+  --link: oklch(0.513 0.16 255.7); /* altar cobalt #1565C0 */
+  --success: oklch(0.523 0.152 147.8); /* mexico green #008030 */
+  --success-foreground: oklch(1 0 0);
+  --turquoise: oklch(0.657 0.112 194.8); /* #00A6A6, decorative only */
+  --sunny: oklch(0.84 0.172 90.4); /* #F5C400, decorative only */
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
   }
-}
-
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  body {
+    @apply bg-background text-foreground;
+  }
 }
