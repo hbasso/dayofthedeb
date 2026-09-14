@@ -2,17 +2,14 @@ import 'server-only';
 import type { AirtableClient, RecordUpdate } from '@/lib/airtable/client';
 import { AIRTABLE } from '@/lib/airtable/fields';
 import { siteConfig } from '@/config/site';
+import { MAX_PLUS_ONE_NAME_LENGTH, storedPlusOneName } from '@/lib/plus-one';
 import type { Invitation } from '@/types/domain';
+import type { RsvpAnswer } from '@/types/rsvp';
 
 const G = AIRTABLE.guests.fields;
 
-export const MAX_PLUS_ONE_NAME_LENGTH = 100;
-
-export interface RsvpAnswer {
-  guestId: string;
-  attending: 'yes' | 'no';
-  plusOneName?: string;
-}
+export { MAX_PLUS_ONE_NAME_LENGTH };
+export type { RsvpAnswer };
 
 export class RsvpValidationError extends Error {
   constructor(message: string) {
@@ -58,11 +55,10 @@ export function buildRsvpUpdates(
     };
 
     if (guest.hasPlusOne) {
-      const plusOneName = answer.plusOneName?.trim() ?? '';
-      if (plusOneName.length > MAX_PLUS_ONE_NAME_LENGTH) {
+      if ((answer.plusOneName?.trim() ?? '').length > MAX_PLUS_ONE_NAME_LENGTH) {
         throw new RsvpValidationError(`Plus-one name for guest ${guest.id} is too long`);
       }
-      fields[G.plusOneName] = answer.attending === 'yes' && plusOneName ? plusOneName : null;
+      fields[G.plusOneName] = storedPlusOneName(true, answer.attending, answer.plusOneName);
     }
 
     return { id: guest.id, fields };
