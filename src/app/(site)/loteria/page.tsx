@@ -14,48 +14,42 @@ const examples = [
     photo: galleryPhotos[0],
     number: 1,
     title: 'El Puente',
-    subtitle: 'The Bridge',
-    palette: { background: '#9FD6F2', accent: '#C2127A' },
+    palette: { background: '#9FD6F2' },
     registered: true,
   },
   {
     photo: galleryPhotos[1],
     number: 2,
     title: 'El Paseo',
-    subtitle: 'The Walk',
-    palette: { background: '#008030', ink: '#FFFCF6', accent: '#F5C400' },
+    palette: { background: '#008030', ink: '#FFFCF6' },
     registered: false,
   },
   {
     photo: galleryPhotos[2],
     number: 3,
     title: 'La Torre',
-    subtitle: 'The Tower',
-    palette: { background: '#FFF3D6', accent: '#D48000' },
+    palette: { background: '#FFF3D6' },
     registered: false,
   },
   {
     photo: galleryPhotos[3],
     number: 4,
     title: 'El Malecón',
-    subtitle: 'The Promenade',
-    palette: { background: '#1565C0', ink: '#FFFCF6', accent: '#00A6A6' },
+    palette: { background: '#1565C0', ink: '#FFFCF6' },
     registered: false,
   },
   {
     photo: galleryPhotos[4],
     number: 5,
     title: 'El Horizonte',
-    subtitle: 'The Skyline',
-    palette: { background: '#00A6A6', accent: '#1565C0' },
+    palette: { background: '#00A6A6' },
     registered: false,
   },
   {
     photo: galleryPhotos[5],
     number: 6,
     title: 'La Orilla',
-    subtitle: 'The Waterfront',
-    palette: { background: '#1B4332', ink: '#FFFCF6', accent: '#D48000' },
+    palette: { background: '#1B4332', ink: '#FFFCF6' },
     registered: true,
   },
 ] as const;
@@ -75,7 +69,6 @@ export default function LoteriaPage() {
           <li key={example.photo.id}>
             <LoteriaCard
               title={example.title}
-              subtitle={example.subtitle}
               number={example.number}
               image={{ src: example.photo.src, alt: example.photo.alt }}
               palette={example.palette}

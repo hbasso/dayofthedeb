@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { contrastRatio, hexToRgb, isHexColor, readableAccent, readableInk, relativeLuminance } from './loteria-colors';
+import { contrastRatio, hexToRgb, isHexColor, readableInk, relativeLuminance } from './loteria-colors';
 
 describe('isHexColor', () => {
   it('accepts 3- and 6-digit hex colors, case-insensitively', () => {
@@ -61,19 +61,5 @@ describe('readableInk', () => {
 
   it('honors custom light/dark options', () => {
     expect(readableInk('#9FD6F2', { light: '#FFFFFF', dark: '#010203' })).toBe('#010203');
-  });
-});
-
-describe('readableAccent', () => {
-  it('keeps an accent that reads as text on the paper', () => {
-    expect(readableAccent('#C2127A', '#FFFCF6', '#17110F')).toBe('#C2127A');
-  });
-
-  it('falls back when the accent is too light to read (marigold on cream)', () => {
-    expect(readableAccent('#D48000', '#FFFCF6', '#17110F')).toBe('#17110F');
-  });
-
-  it('falls back for an invalid accent', () => {
-    expect(readableAccent('marigold', '#FFFCF6', '#17110F')).toBe('#17110F');
   });
 });

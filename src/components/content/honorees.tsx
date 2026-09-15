@@ -23,8 +23,8 @@ export function Honorees() {
             <LoteriaCard
               number={honoree.number}
               title={honoree.name ?? 'La Debutante'}
-              subtitle={honoree.name ? undefined : 'Name to be announced'}
               image={honoree.image ?? undefined}
+              placeholderLabel={honoree.name ? 'Photo to come' : 'Name and photo to come'}
               palette={honoree.palette}
             />
           </li>

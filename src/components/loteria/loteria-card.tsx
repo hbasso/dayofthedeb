@@ -1,24 +1,21 @@
 import type { CSSProperties } from 'react';
 import Image from 'next/image';
-import { isHexColor, readableAccent, readableInk } from '@/lib/loteria-colors';
+import { isHexColor, readableInk } from '@/lib/loteria-colors';
 
 export interface LoteriaCardPalette {
-  /** Art background behind the image. */
+  /** Art background. The title sits on it, so it also decides the ink. */
   background?: string;
-  /** Keyline + number + title ink, printed on `paper`. Defaults to whatever reads on the paper. */
+  /** Number, title and keyline. Defaults to whichever reads on `background`. */
   ink?: string;
-  /** Paper/margin color. */
+  /** The paper margin around the art. */
   paper?: string;
-  /** Small accent used for the subtitle and the rule above the title. */
-  accent?: string;
 }
 
 export interface LoteriaCardProps {
   title: string;
-  /** Leave out until the photo exists; the frame then shows a placeholder panel. */
+  /** Leave out until the photo exists; the frame then shows a placeholder line. */
   image?: { src: string; alt: string };
   number?: number | string;
-  subtitle?: string;
   palette?: LoteriaCardPalette;
   /** Shows the ® mark like Don Clemente cards. Default false. */
   registered?: boolean;
@@ -35,7 +32,6 @@ export interface LoteriaCardProps {
 const DEFAULT_PALETTE = {
   background: '#9FD6F2', // lotería sky blue
   paper: '#FFFCF6',
-  accent: '#C2127A',
 } as const;
 
 function pickColor(value: string | undefined, fallback: string): string {
@@ -46,7 +42,6 @@ export function LoteriaCard({
   title,
   image,
   number,
-  subtitle,
   palette,
   registered = false,
   fit = 'cover',
@@ -55,57 +50,47 @@ export function LoteriaCard({
 }: LoteriaCardProps) {
   const background = pickColor(palette?.background, DEFAULT_PALETTE.background);
   const paper = pickColor(palette?.paper, DEFAULT_PALETTE.paper);
-  const accent = pickColor(palette?.accent, DEFAULT_PALETTE.accent);
-  // The title, number and keyline sit on the paper; the ® sits on the art. A dark
-  // art background must not bleach the title, so the two inks are chosen separately.
-  const ink = pickColor(palette?.ink, readableInk(paper));
-  const artInk = readableInk(background);
+  const ink = pickColor(palette?.ink, readableInk(background));
 
   const style = {
     '--loteria-background': background,
     '--loteria-paper': paper,
-    '--loteria-accent': accent,
     '--loteria-ink': ink,
-    '--loteria-art-ink': artInk,
-    '--loteria-subtitle': readableAccent(accent, paper, ink),
   } as CSSProperties;
 
   return (
-    <figure
-      style={style}
-      className={`rounded-sm border-2 border-[var(--loteria-ink)] bg-[var(--loteria-paper)] p-2 sm:p-3 ${className ?? ''}`}
-    >
-      <div className="relative aspect-[4/5] overflow-hidden rounded-[2px] border-2 border-[var(--loteria-ink)] bg-[var(--loteria-background)]">
-        {image ? (
-          <Image
-            src={image.src}
-            alt={image.alt}
-            fill
-            sizes="(min-width: 1024px) 25vw, (min-width: 640px) 33vw, 50vw"
-            className={fit === 'contain' ? 'object-contain' : 'object-cover'}
-          />
-        ) : (
-          <p className="font-loteria absolute inset-0 flex items-center justify-center p-4 text-center text-xs tracking-[0.18em] text-[var(--loteria-art-ink)] uppercase">
-            {placeholderLabel}
-          </p>
-        )}
+    <figure style={style} className={`bg-[var(--loteria-paper)] p-1.5 sm:p-2 ${className ?? ''}`}>
+      {/* One frame holds everything, like the printed card: art, number and title all sit on the same ground. */}
+      <div className="@container relative aspect-[5/7] overflow-hidden border-2 border-[var(--loteria-ink)] bg-[var(--loteria-background)]">
+        <div className="absolute inset-x-0 top-0 bottom-[15%]">
+          {image ? (
+            <Image
+              src={image.src}
+              alt={image.alt}
+              fill
+              sizes="(min-width: 1024px) 20vw, (min-width: 640px) 33vw, 50vw"
+              className={fit === 'contain' ? 'object-contain' : 'object-cover'}
+            />
+          ) : (
+            <p className="font-loteria absolute inset-0 flex items-center justify-center p-3 text-center text-[4cqw] tracking-[0.12em] text-[var(--loteria-ink)] uppercase">
+              {placeholderLabel}
+            </p>
+          )}
+        </div>
         {number !== undefined && (
-          <span className="font-loteria absolute left-1.5 top-1.5 min-w-6 rounded-sm border border-[var(--loteria-ink)] bg-[var(--loteria-paper)] px-1.5 py-0.5 text-center text-sm font-bold tabular-nums text-[var(--loteria-ink)]">
+          <span className="font-loteria absolute top-[2%] left-[4%] text-[9cqw] leading-none font-bold tabular-nums text-[var(--loteria-ink)]">
             {number}
           </span>
         )}
         {registered && (
-          <span className="absolute right-1.5 top-1.5 text-xs font-bold leading-none text-[var(--loteria-art-ink)]">®</span>
+          <span className="absolute top-[3%] right-[4%] text-[4cqw] leading-none text-[var(--loteria-ink)]">®</span>
         )}
+        <figcaption className="absolute inset-x-0 bottom-0 flex h-[15%] items-center justify-center px-[3%]">
+          <p className="font-loteria w-full text-center text-[clamp(0.55rem,9cqw,2.5rem)] leading-none font-bold tracking-[0.06em] text-balance text-[var(--loteria-ink)] uppercase">
+            {title}
+          </p>
+        </figcaption>
       </div>
-      <figcaption className="pt-2 text-center sm:pt-3">
-        <div className="mx-auto mb-2 h-px w-10 bg-[var(--loteria-accent)]" />
-        {/* Wide tracking eats horizontal room, so the title stays small enough for a narrow card. */}
-        <p className="font-loteria text-base leading-tight font-bold tracking-[0.1em] text-balance break-words text-[var(--loteria-ink)] uppercase sm:text-lg sm:tracking-[0.12em]">
-          {title}
-        </p>
-        {subtitle && <p className="mt-1 text-sm text-[var(--loteria-subtitle)]">{subtitle}</p>}
-      </figcaption>
     </figure>
   );
 }
