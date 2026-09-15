@@ -10,7 +10,7 @@ export function VenueMap() {
         src={googleMapsEmbedUrl(venueMapQuery(siteConfig.venue))}
         className="h-full w-full"
         loading="lazy"
-        referrerPolicy="no-referrer-when-downgrade"
+        referrerPolicy="strict-origin-when-cross-origin"
       />
     </div>
   );

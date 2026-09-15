@@ -20,10 +20,19 @@ export default function HomePage() {
           {siteConfig.venue.name}, {siteConfig.venue.city}
         </p>
         <div className="mx-auto flex max-w-md flex-col gap-3 sm:flex-row">
-          <Link href="/rsvp" className={buttonVariants({ className: 'h-12 flex-1 text-base' })}>
+          <Link
+            href="/rsvp"
+            className={buttonVariants({ className: 'h-auto min-h-12 flex-1 py-2 text-center text-base whitespace-normal' })}
+          >
             RSVP
           </Link>
-          <Link href="/venue" className={buttonVariants({ variant: 'outline', className: 'h-12 flex-1 text-base' })}>
+          <Link
+            href="/venue"
+            className={buttonVariants({
+              variant: 'outline',
+              className: 'h-auto min-h-12 flex-1 py-2 text-center text-base whitespace-normal',
+            })}
+          >
             Venue &amp; directions
           </Link>
         </div>

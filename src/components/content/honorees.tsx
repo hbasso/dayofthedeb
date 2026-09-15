@@ -14,7 +14,7 @@ export function Honorees() {
       {names.length > 0 ? (
         <ul className="flex flex-wrap justify-center gap-3">
           {names.map((name, index) => (
-            <li key={`${index}-${name}`}className="rounded-full bg-secondary px-4 py-2 text-lg font-semibold text-secondary-foreground">
+            <li key={`${index}-${name}`} className="rounded-full bg-secondary px-4 py-2 text-xl font-bold text-secondary-foreground">
               {name}
             </li>
           ))}

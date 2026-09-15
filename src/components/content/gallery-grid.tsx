@@ -22,6 +22,7 @@ export function GalleryGrid() {
             {index > 0 && ', '}
             <a href={photo.photoUrl} target="_blank" rel="noopener noreferrer" className="underline underline-offset-2 hover:text-foreground">
               {photo.photographer}
+              <span className="sr-only"> (opens in a new tab)</span>
             </a>
           </span>
         ))}{' '}

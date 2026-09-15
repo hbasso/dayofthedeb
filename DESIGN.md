@@ -221,7 +221,7 @@ All informational content lives on two routes: the landing page (`/`) and the ve
 
 **Landing (`/`)** is the general front door: the event basics (date, time, dress code), an optional `next/image` gallery strip, and clear links into the RSVP flow and the venue page. Schedule and dress-code detail live here as sections, not separate routes. The landing links to `/rsvp`; it does not itself hold the search. Five honorees (names to be announced). Placeholder River Walk photos from Unsplash (credited) until the host's photos arrive. Every unconfirmed fact renders "To be announced" from config.
 
-**Venue (`/venue`)** opens with a short overview of Mexico Ceaty (what the place is, the private food-court concept, a hero image, the address, a map), then continues into the arrival logistics, which are the substantial part of the page and are described next.
+**Venue (`/venue`)** opens with a short overview of Mexico Ceaty (what the place is, the private food-court concept, a hero image (deferred until the host's photos arrive), the address, a map), then continues into the arrival logistics, which are the substantial part of the page and are described next.
 
 ### Getting to the venue
 
@@ -278,7 +278,7 @@ Tailwind v4 plus shadcn theme via CSS variables. The palette lives as `:root` (a
 
 | Token | Color | Hex |
 |---|---|---|
-| `--primary` | Fiesta Hot Pink | `#E91E8C` |
+| `--primary` | Fiesta Hot Pink (deepened for contrast) | #C2127A (originally #E91E8C) |
 | `--secondary` / `--accent` | Marigold Orange | `#D48000` |
 | cool contrast (links, secondary buttons) | Altar Cobalt Blue | `#1565C0` |
 | `--foreground` (grounding ink) | Deep Fiesta Red | `#6A0008` |

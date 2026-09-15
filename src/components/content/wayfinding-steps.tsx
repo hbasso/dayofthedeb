@@ -4,8 +4,8 @@ export function WayfindingSteps({ steps, placeholder }: { steps: string[]; place
   }
   return (
     <ol className="list-decimal space-y-2 pl-6 text-base marker:font-semibold marker:text-primary">
-      {steps.map((step) => (
-        <li key={step}>{step}</li>
+      {steps.map((step, index) => (
+        <li key={`${index}-${step}`}>{step}</li>
       ))}
     </ol>
   );

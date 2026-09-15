@@ -6,7 +6,7 @@ import { directionsConfig } from '@/config/directions';
 function Option({ title, children }: { title: string; children: ReactNode }) {
   return (
     <details className="group rounded-xl border border-border bg-card">
-      <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-4 px-4 py-3 text-lg font-semibold focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none">
+      <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-4 px-4 py-3 text-lg font-semibold [&::-webkit-details-marker]:hidden focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none">
         {title}
         <span aria-hidden className="text-2xl text-muted-foreground transition-transform group-open:rotate-45">
           +

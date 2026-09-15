@@ -48,10 +48,13 @@ export function RsvpConfirmation({ household }: { household: RosterHousehold }) 
         Plans change? Search your name again anytime{deadline ? ` before ${deadline}` : ''} to update your RSVP.
       </p>
       <div className="grid gap-3 sm:grid-cols-2">
-        <Link href="/" className={buttonVariants({ variant: 'outline', className: 'h-12 w-full text-base' })}>
+        <Link
+          href="/"
+          className={buttonVariants({ variant: 'outline', className: 'h-auto min-h-12 w-full py-2 text-center text-base whitespace-normal' })}
+        >
           Back to home
         </Link>
-        <Link href="/venue" className={buttonVariants({ className: 'h-12 w-full text-base' })}>
+        <Link href="/venue" className={buttonVariants({ className: 'h-auto min-h-12 w-full py-2 text-center text-base whitespace-normal' })}>
           Venue &amp; directions
         </Link>
       </div>

@@ -39,18 +39,29 @@ export function RideshareCard() {
               href={uberDropoffUrl(dropoff, venue.name, venueSingleLine(venue))}
               target="_blank"
               rel="noopener noreferrer"
-              className={buttonVariants({ variant: 'outline', className: 'h-12 w-full text-base' })}
+              className={buttonVariants({
+                variant: 'outline',
+                className: 'h-auto min-h-12 w-full py-2 text-center text-base whitespace-normal text-foreground',
+              })}
             >
               Request an Uber
+              <span className="sr-only"> (opens in a new tab)</span>
             </a>
             <a
               href={lyftDropoffUrl(dropoff)}
               target="_blank"
               rel="noopener noreferrer"
-              className={buttonVariants({ variant: 'outline', className: 'h-12 w-full text-base' })}
+              className={buttonVariants({
+                variant: 'outline',
+                className: 'h-auto min-h-12 w-full py-2 text-center text-base whitespace-normal text-foreground',
+              })}
             >
               Request a Lyft
+              <span className="sr-only"> (opens in a new tab)</span>
             </a>
+            <div className="sm:col-span-2">
+              <OpenInMapsButton query={venueMapQuery(venue)} label="Open the venue in Maps" variant="outline" />
+            </div>
           </>
         ) : (
           <div className="sm:col-span-2">

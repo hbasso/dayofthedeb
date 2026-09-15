@@ -49,7 +49,7 @@
   --popover: oklch(0.992 0.009 84.6);
   --popover-foreground: oklch(0.33 0.134 26.3);
 
-  --primary: oklch(0.618 0.241 355.3); /* fiesta hot pink #E91E8C */
+  --primary: oklch(0.539 0.215 352.6); /* fiesta pink #C2127A (deepened from #E91E8C for AA contrast) */
   --primary-foreground: oklch(1 0 0);
   --secondary: oklch(0.675 0.151 65.6); /* marigold #D48000 */
   --secondary-foreground: oklch(0.33 0.134 26.3); /* ink, not white: white on marigold is 3.05:1 */
@@ -61,7 +61,7 @@
   --destructive: oklch(0.539 0.194 26.7); /* #C62828 */
   --border: oklch(0.891 0.035 78.7); /* #E8D9C2 */
   --input: oklch(0.891 0.035 78.7);
-  --ring: oklch(0.618 0.241 355.3);
+  --ring: oklch(0.539 0.215 352.6);
 
   --link: oklch(0.513 0.16 255.7); /* altar cobalt #1565C0 */
   --success: oklch(0.523 0.152 147.8); /* mexico green #008030 */
