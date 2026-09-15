@@ -58,8 +58,12 @@ export function LoteriaCard({
     '--loteria-ink': ink,
   } as CSSProperties;
 
+  // The paper is close to the page background, so the shadow is what separates card from page.
   return (
-    <figure style={style} className={`bg-[var(--loteria-paper)] p-1.5 sm:p-2 ${className ?? ''}`}>
+    <figure
+      style={style}
+      className={`rounded-[2px] bg-[var(--loteria-paper)] p-1.5 shadow-lg shadow-foreground/25 sm:p-2 ${className ?? ''}`}
+    >
       {/* One frame holds everything, like the printed card: art, number and title all sit on the same ground. */}
       <div className="@container relative aspect-[5/7] overflow-hidden border-2 border-[var(--loteria-ink)] bg-[var(--loteria-background)]">
         <div className="absolute inset-x-0 top-0 bottom-[15%]">
