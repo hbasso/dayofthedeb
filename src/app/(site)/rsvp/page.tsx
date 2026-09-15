@@ -1,5 +1,4 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
 import { RsvpFlow } from '@/components/rsvp/rsvp-flow';
 import { siteConfig } from '@/config/site';
 import { formatEventDate } from '@/lib/dates';
@@ -13,10 +12,7 @@ export default function RsvpPage() {
 
   return (
     <main className="mx-auto w-full max-w-lg px-4 py-10 sm:py-16">
-      <Link href="/" className="text-link underline-offset-4 hover:underline">
-        ← {siteConfig.name}
-      </Link>
-      <header className="mt-6 mb-8 space-y-2">
+      <header className="mb-8 space-y-2">
         <h1 className="font-display text-5xl">RSVP</h1>
         {deadline && <p className="text-lg text-muted-foreground">Please respond by {deadline}.</p>}
       </header>

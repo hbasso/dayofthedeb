@@ -10,6 +10,10 @@ const nextConfig: NextConfig = {
       expire: 3600,
     },
   },
+  images: {
+    // Placeholder gallery photos (src/config/gallery.ts).
+    remotePatterns: [{ protocol: 'https', hostname: 'images.unsplash.com', pathname: '/photo-**' }],
+  },
 };
 
 export default nextConfig;
