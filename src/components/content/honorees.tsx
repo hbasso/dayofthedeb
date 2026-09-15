@@ -1,27 +1,31 @@
+import { LoteriaCard } from '@/components/loteria/loteria-card';
+import { honorees } from '@/config/honorees';
 import { siteConfig } from '@/config/site';
 
 const NUMBER_WORDS = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten'];
 
 export function Honorees() {
-  const { count, names } = siteConfig.honorees;
+  const { count } = siteConfig.honorees;
   const countWord = NUMBER_WORDS[count] ?? String(count);
 
   return (
-    <section aria-labelledby="honorees-heading" className="space-y-4 text-center">
+    <section aria-labelledby="honorees-heading" className="space-y-6 text-center">
       <h2 id="honorees-heading" className="font-display text-3xl">
         Celebrating our {countWord} débutantes
       </h2>
-      {names.length > 0 ? (
-        <ul className="flex flex-wrap justify-center gap-3">
-          {names.map((name, index) => (
-            <li key={`${index}-${name}`} className="rounded-full bg-secondary px-4 py-2 text-xl font-bold text-secondary-foreground">
-              {name}
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <p className="text-lg text-muted-foreground italic">Names to be announced</p>
-      )}
+      <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+        {honorees.map((honoree) => (
+          <li key={honoree.number}>
+            <LoteriaCard
+              number={honoree.number}
+              title={honoree.name ?? 'La Debutante'}
+              subtitle={honoree.name ? undefined : 'Name to be announced'}
+              image={honoree.image ?? undefined}
+              palette={honoree.palette}
+            />
+          </li>
+        ))}
+      </ul>
     </section>
   );
 }

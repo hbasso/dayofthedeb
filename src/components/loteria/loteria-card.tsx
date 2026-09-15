@@ -15,7 +15,8 @@ export interface LoteriaCardPalette {
 
 export interface LoteriaCardProps {
   title: string;
-  image: { src: string; alt: string };
+  /** Leave out until the photo exists; the frame then shows a placeholder panel. */
+  image?: { src: string; alt: string };
   number?: number | string;
   subtitle?: string;
   palette?: LoteriaCardPalette;
@@ -23,6 +24,8 @@ export interface LoteriaCardProps {
   registered?: boolean;
   /** How the art sits in its frame. Default 'cover'. */
   fit?: 'cover' | 'contain';
+  /** Shown in the frame when there is no image yet. */
+  placeholderLabel?: string;
   className?: string;
 }
 
@@ -47,6 +50,7 @@ export function LoteriaCard({
   palette,
   registered = false,
   fit = 'cover',
+  placeholderLabel = 'Photo to come',
   className,
 }: LoteriaCardProps) {
   const background = pickColor(palette?.background, DEFAULT_PALETTE.background);
@@ -72,13 +76,19 @@ export function LoteriaCard({
       className={`rounded-sm border-2 border-[var(--loteria-ink)] bg-[var(--loteria-paper)] p-2 sm:p-3 ${className ?? ''}`}
     >
       <div className="relative aspect-[4/5] overflow-hidden rounded-[2px] border-2 border-[var(--loteria-ink)] bg-[var(--loteria-background)]">
-        <Image
-          src={image.src}
-          alt={image.alt}
-          fill
-          sizes="(min-width: 1024px) 25vw, (min-width: 640px) 33vw, 50vw"
-          className={fit === 'contain' ? 'object-contain' : 'object-cover'}
-        />
+        {image ? (
+          <Image
+            src={image.src}
+            alt={image.alt}
+            fill
+            sizes="(min-width: 1024px) 25vw, (min-width: 640px) 33vw, 50vw"
+            className={fit === 'contain' ? 'object-contain' : 'object-cover'}
+          />
+        ) : (
+          <p className="font-loteria absolute inset-0 flex items-center justify-center p-4 text-center text-xs tracking-[0.18em] text-[var(--loteria-art-ink)] uppercase">
+            {placeholderLabel}
+          </p>
+        )}
         {number !== undefined && (
           <span className="font-loteria absolute left-1.5 top-1.5 min-w-6 rounded-sm border border-[var(--loteria-ink)] bg-[var(--loteria-paper)] px-1.5 py-0.5 text-center text-sm font-bold tabular-nums text-[var(--loteria-ink)]">
             {number}
