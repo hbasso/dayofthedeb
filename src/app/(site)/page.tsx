@@ -28,7 +28,7 @@ export default function HomePage() {
         <div className="mx-auto w-full max-w-6xl space-y-10 px-4 py-14 text-center text-background sm:py-20 lg:space-y-14 lg:py-24">
           <div className="space-y-5 lg:space-y-7">
             <p className="text-xl font-bold tracking-widest uppercase sm:text-2xl">You&apos;re invited</p>
-            <h1 className="font-display text-6xl leading-tight drop-shadow-sm sm:text-8xl lg:text-9xl">
+            <h1 className="hero-title-print font-display text-6xl leading-tight sm:text-8xl lg:text-9xl">
               {siteConfig.name}
             </h1>
             <p className="mx-auto max-w-2xl text-xl sm:text-2xl">

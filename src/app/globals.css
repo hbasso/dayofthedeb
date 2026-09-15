@@ -79,3 +79,15 @@
     @apply bg-background text-foreground;
   }
 }
+
+/**
+ * Hero title: fiesta colors offset behind the letterforms, like a misregistered print run.
+ * Offsets are in em so they track the type scale from mobile through desktop, and the last
+ * layer is a plain dark shade that keeps the title legible over the busy River Walk photo.
+ */
+.hero-title-print {
+  text-shadow:
+    0.02em 0.02em 0 #c2127a,
+    0.04em 0.04em 0 #d48000,
+    0.058em 0.058em 0.02em rgb(0 0 0 / 0.4);
+}
