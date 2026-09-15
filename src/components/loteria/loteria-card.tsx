@@ -100,7 +100,8 @@ export function LoteriaCard({
       </div>
       <figcaption className="pt-2 text-center sm:pt-3">
         <div className="mx-auto mb-2 h-px w-10 bg-[var(--loteria-accent)]" />
-        <p className="font-loteria text-balance text-xl font-bold uppercase tracking-[0.18em] text-[var(--loteria-ink)] sm:text-2xl">
+        {/* Wide tracking eats horizontal room, so the title stays small enough for a narrow card. */}
+        <p className="font-loteria text-base leading-tight font-bold tracking-[0.1em] text-balance break-words text-[var(--loteria-ink)] uppercase sm:text-lg sm:tracking-[0.12em]">
           {title}
         </p>
         {subtitle && <p className="mt-1 text-sm text-[var(--loteria-subtitle)]">{subtitle}</p>}

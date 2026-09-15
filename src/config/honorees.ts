@@ -13,8 +13,10 @@ export interface Honoree {
 
 export const honorees: Honoree[] = [
   { number: 1, name: null, image: null, palette: { background: '#C2127A', accent: '#C2127A' } },
-  { number: 2, name: null, image: null, palette: { background: '#D48000', accent: '#D48000' } },
+  // Marigold and turquoise are too light to read as small text on the cream paper,
+  // so their accents are deepened; the artwork keeps the brighter hue.
+  { number: 2, name: null, image: null, palette: { background: '#D48000', accent: '#A05F00' } },
   { number: 3, name: null, image: null, palette: { background: '#008030', accent: '#008030' } },
   { number: 4, name: null, image: null, palette: { background: '#1565C0', accent: '#1565C0' } },
-  { number: 5, name: null, image: null, palette: { background: '#00A6A6', accent: '#00A6A6' } },
+  { number: 5, name: null, image: null, palette: { background: '#00A6A6', accent: '#00716F' } },
 ];

@@ -13,9 +13,13 @@ export function Honorees() {
       <h2 id="honorees-heading" className="font-display text-3xl">
         Celebrating our {countWord} débutantes
       </h2>
-      <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+      {/* Flex-wrap, not a grid: a short last row (5 cards over 2 or 3 columns) stays centered. */}
+      <ul className="flex flex-wrap justify-center gap-4">
         {honorees.map((honoree) => (
-          <li key={honoree.number}>
+          <li
+            key={honoree.number}
+            className="w-[calc(50%-0.5rem)] max-w-56 sm:w-[calc(33.333%-0.667rem)] lg:w-[calc(20%-0.8rem)]"
+          >
             <LoteriaCard
               number={honoree.number}
               title={honoree.name ?? 'La Debutante'}
