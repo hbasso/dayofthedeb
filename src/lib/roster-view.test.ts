@@ -28,6 +28,7 @@ describe('toRosterHousehold', () => {
     expect(household).toEqual({
       id: id('Biggs'),
       household: 'The Biggs Family',
+      hasEmailOnFile: true,
       guests: [
         { id: id('Grant'), name: 'Grant Biggs', hasPlusOne: true, attending: 'yes', plusOneName: 'Priya Raman' },
         { id: id('Mario'), name: 'Mario Biggs', hasPlusOne: false, attending: null },
@@ -37,6 +38,11 @@ describe('toRosterHousehold', () => {
     expect(serialized).not.toContain('biggs@example.com');
     expect(serialized).not.toContain('G-Man');
     expect(serialized).not.toContain('2026-09-10');
+  });
+
+  it('reports no email on file when the invitation has none', () => {
+    const household = toRosterHousehold({ ...invitation, email: undefined });
+    expect(household.hasEmailOnFile).toBe(false);
   });
 
   it('drops a host-entered plus-one name for a guest without plus-one eligibility', () => {

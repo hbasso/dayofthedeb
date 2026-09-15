@@ -47,6 +47,9 @@ export function RsvpConfirmation({ household }: { household: RosterHousehold }) 
       <p className="text-muted-foreground">
         Plans change? Search your name again anytime{deadline ? ` before ${deadline}` : ''} to update your RSVP.
       </p>
+      {household.hasEmailOnFile && (
+        <p className="text-muted-foreground">We&apos;ll send reminders to the email you added.</p>
+      )}
       <div className="grid gap-3 sm:grid-cols-2">
         <Link
           href="/"

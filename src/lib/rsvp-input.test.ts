@@ -15,6 +15,32 @@ describe('parseSubmitRsvpInput', () => {
     expect(parseSubmitRsvpInput(valid)).toEqual(valid);
   });
 
+  it('omits email when absent', () => {
+    expect(parseSubmitRsvpInput(valid)).not.toHaveProperty('email');
+  });
+
+  it('omits email when an empty string', () => {
+    const parsed = parseSubmitRsvpInput({ ...valid, email: '' });
+    expect(parsed).not.toHaveProperty('email');
+  });
+
+  it('includes a normalized email when valid', () => {
+    const parsed = parseSubmitRsvpInput({ ...valid, email: ' Hudson.Basso@Example.COM ' });
+    expect(parsed).toEqual({ ...valid, email: 'hudson.basso@example.com' });
+  });
+
+  it('rejects a submission with a malformed email', () => {
+    expect(parseSubmitRsvpInput({ ...valid, email: 'not-an-email' })).toBeNull();
+  });
+
+  it('rejects a submission with a non-string email', () => {
+    expect(parseSubmitRsvpInput({ ...valid, email: 42 })).toBeNull();
+  });
+
+  it('rejects a submission with an overlong email', () => {
+    expect(parseSubmitRsvpInput({ ...valid, email: `${'a'.repeat(300)}@example.com` })).toBeNull();
+  });
+
   it('drops unexpected extra properties', () => {
     const parsed = parseSubmitRsvpInput({
       ...valid,

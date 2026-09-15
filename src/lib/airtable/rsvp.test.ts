@@ -1,7 +1,14 @@
 import { describe, expect, it, vi } from 'vitest';
 import type { AirtableClient } from '@/lib/airtable/client';
 import { AIRTABLE } from '@/lib/airtable/fields';
-import { buildRsvpUpdates, respondedOnDate, RsvpValidationError, writeRsvp } from '@/lib/airtable/rsvp';
+import {
+  buildHouseholdEmailUpdate,
+  buildRsvpUpdates,
+  respondedOnDate,
+  RsvpValidationError,
+  writeHouseholdEmail,
+  writeRsvp,
+} from '@/lib/airtable/rsvp';
 import { MAX_PLUS_ONE_NAME_LENGTH } from '@/lib/plus-one';
 import type { Invitation } from '@/types/domain';
 import type { RsvpAnswer } from '@/types/rsvp';
@@ -105,5 +112,31 @@ describe('writeRsvp', () => {
     await writeRsvp(client, updates);
 
     expect(updateRecords).toHaveBeenCalledWith(AIRTABLE.guests.tableId, updates);
+  });
+});
+
+describe('buildHouseholdEmailUpdate', () => {
+  it('builds an update targeting the invitation email field', () => {
+    const update = buildHouseholdEmailUpdate(invitation, 'hudson.basso@example.com');
+    expect(update).toEqual({
+      id: invitation.id,
+      fields: { [AIRTABLE.invitations.fields.email]: 'hudson.basso@example.com' },
+    });
+  });
+
+  it('rejects a malformed email', () => {
+    expect(() => buildHouseholdEmailUpdate(invitation, 'not-an-email')).toThrow(RsvpValidationError);
+  });
+});
+
+describe('writeHouseholdEmail', () => {
+  it('sends the update to the Invitations table', async () => {
+    const updateRecords = vi.fn(async () => {});
+    const client: AirtableClient = { listAllRecords: vi.fn(), updateRecords };
+    const update = { id: invitation.id, fields: { [AIRTABLE.invitations.fields.email]: 'a@b.co' } };
+
+    await writeHouseholdEmail(client, update);
+
+    expect(updateRecords).toHaveBeenCalledWith(AIRTABLE.invitations.tableId, [update]);
   });
 });

@@ -67,11 +67,13 @@ describe('submitRsvp', () => {
       { id: id('Mario'), fields: { [G.attending]: 'No', [G.respondedAt]: DATE } },
     ]);
     expect(mocks.updateTag).toHaveBeenCalledWith('guests');
+    expect(mocks.updateRecords).toHaveBeenCalledTimes(1);
     expect(result).toEqual({
       status: 'ok',
       household: {
         id: biggs.id,
         household: 'The Biggs Family',
+        hasEmailOnFile: false,
         guests: [
           { id: id('Grant'), name: 'Grant Biggs', hasPlusOne: true, attending: 'yes', plusOneName: 'Priya Raman' },
           { id: id('Mario'), name: 'Mario Biggs', hasPlusOne: false, attending: 'no' },
@@ -79,6 +81,37 @@ describe('submitRsvp', () => {
       },
     });
     expect(JSON.stringify(result)).not.toContain('biggs@example.com');
+  });
+
+  it('writes the household email in addition to the guest answers when provided', async () => {
+    const result = await submitRsvp({ ...validInput, email: ' Hudson.Basso@Example.COM ' });
+
+    expect(mocks.updateRecords).toHaveBeenCalledTimes(2);
+    expect(mocks.updateRecords).toHaveBeenNthCalledWith(1, AIRTABLE.guests.tableId, expect.any(Array));
+    expect(mocks.updateRecords).toHaveBeenNthCalledWith(2, AIRTABLE.invitations.tableId, [
+      { id: biggs.id, fields: { [AIRTABLE.invitations.fields.email]: 'hudson.basso@example.com' } },
+    ]);
+    expect(result.status).toBe('ok');
+    if (result.status === 'ok') expect(result.household.hasEmailOnFile).toBe(true);
+  });
+
+  it('rejects a submission with an invalid email without writing anything', async () => {
+    expect(await submitRsvp({ ...validInput, email: 'not-an-email' })).toEqual({ status: 'invalid' });
+    expectNoWrite();
+  });
+
+  it('still returns ok when the household email write fails', async () => {
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
+    mocks.updateRecords.mockImplementation(async (tableId: string) => {
+      if (tableId === AIRTABLE.invitations.tableId) throw new Error('Airtable 503');
+    });
+
+    const result = await submitRsvp({ ...validInput, email: 'hudson.basso@example.com' });
+
+    expect(result.status).toBe('ok');
+    expect(mocks.updateTag).toHaveBeenCalledWith('guests');
+    expect(consoleError).toHaveBeenCalledWith('household email write failed', expect.any(Error));
+    consoleError.mockRestore();
   });
 
   it('checks the site session before anything else', async () => {

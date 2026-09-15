@@ -7,6 +7,7 @@ export function toRosterHousehold(invitation: Invitation): RosterHousehold {
   return {
     id: invitation.id,
     household: invitation.household,
+    hasEmailOnFile: Boolean(invitation.email),
     guests: invitation.guests.map((guest) => ({
       id: guest.id,
       name: guest.name,

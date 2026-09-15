@@ -63,7 +63,7 @@ These are the rules that keep the app simple, fast, and safe. They should hold a
 | Field | Type | Notes |
 |---|---|---|
 | Household | Single line text (primary) | Display label, e.g. "The Biggs Family". Cosmetic only, never used as a key. |
-| Contact Email | Email | Optional. Used by the app only if confirmation emails or reminders are enabled; otherwise host reference. |
+| Contact Email | Email | Optional, one per household. Entered by the guest on the RSVP page (not by the host); used for deadline reminders and schedule-change notices. Never sent to the browser — the roster projection carries only a `hasEmailOnFile` flag. |
 | Address / City / State / Zip | Single line text | Mailing address for the printed invitation. Host reference and CSV export only; the site never reads them. |
 | Expected Size | Number | Optional headcount for the host's own tracking. |
 | Notes | Long text | Optional, host-facing. Not read by the site. |
@@ -169,7 +169,7 @@ The visual flow is demonstrated in the standalone HTML prototype delivered earli
 4. **Roster.** The household's named guests are listed, each with a Yes / No control. Empty means no response yet.
 5. **Conditional plus-one.** For a guest whose `hasPlusOne` is checked, marking them attending reveals a "bringing a guest?" toggle; choosing yes reveals a name input that saves to `plusOneName`. If the guest flips to No (or answers no to the toggle), the name clears. Guests without `hasPlusOne` never see this. This is the only genuinely conditional piece of interaction in the app.
 6. **Tally.** A live headcount sums attending guests plus one for each attending guest with a filled `plusOneName`. This number is exactly what the caterer export counts.
-7. **Submit.** A server action validates the payload and upserts the household's guest records in Airtable: it writes `attending`, writes or clears `plusOneName`, sets `Responded At`, then calls updateTag('guests') (read-your-own-writes) so a re-search shows fresh data. Because it upserts, the same action serves both a first response and an edit.
+7. **Submit.** A server action validates the payload and upserts the household's guest records in Airtable: it writes `attending`, writes or clears `plusOneName`, sets `Responded At`, then calls updateTag('guests') (read-your-own-writes) so a re-search shows fresh data. Because it upserts, the same action serves both a first response and an edit. If the guest also entered a household email, the action writes it to the invitation's `Contact Email` field as a separate, best-effort step (a failure there does not fail the RSVP); the address itself is never sent to the browser, before or after — the roster projection only ever carries whether one is on file.
 8. **Confirmation.** A summary of who is coming, with a note that they can search their name again anytime to update their response.
 
 ### One route, client-driven

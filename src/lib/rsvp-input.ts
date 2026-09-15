@@ -1,3 +1,4 @@
+import { isLikelyEmail, normalizeEmail } from '@/lib/email';
 import { MAX_PLUS_ONE_NAME_LENGTH } from '@/lib/plus-one';
 import type { RsvpAnswer, SubmitRsvpInput } from '@/types/rsvp';
 
@@ -21,10 +22,15 @@ function parseAnswer(value: unknown): RsvpAnswer | null {
 /** Parses untrusted server-action input. Returns null for anything malformed. */
 export function parseSubmitRsvpInput(input: unknown): SubmitRsvpInput | null {
   if (!isRecord(input)) return null;
-  const { invitationId, answers } = input;
+  const { invitationId, answers, email } = input;
   if (typeof invitationId !== 'string' || !RECORD_ID.test(invitationId)) return null;
   if (!Array.isArray(answers) || answers.length === 0 || answers.length > MAX_ANSWERS) return null;
   const parsed = answers.map(parseAnswer);
   if (!parsed.every((answer): answer is RsvpAnswer => answer !== null)) return null;
-  return { invitationId, answers: parsed };
+
+  if (email === undefined || email === '') return { invitationId, answers: parsed };
+  if (typeof email !== 'string') return null;
+  const normalized = normalizeEmail(email);
+  if (!isLikelyEmail(normalized)) return null;
+  return { invitationId, answers: parsed, email: normalized };
 }

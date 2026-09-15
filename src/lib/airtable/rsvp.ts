@@ -2,6 +2,7 @@ import 'server-only';
 import type { AirtableClient, RecordUpdate } from '@/lib/airtable/client';
 import { AIRTABLE } from '@/lib/airtable/fields';
 import { siteConfig } from '@/config/site';
+import { isLikelyEmail } from '@/lib/email';
 import { MAX_PLUS_ONE_NAME_LENGTH, storedPlusOneName } from '@/lib/plus-one';
 import type { Invitation } from '@/types/domain';
 import type { RsvpAnswer } from '@/types/rsvp';
@@ -74,4 +75,16 @@ export function respondedOnDate(now: Date = new Date()): string {
 
 export async function writeRsvp(client: AirtableClient, updates: readonly RecordUpdate[]): Promise<void> {
   await client.updateRecords(AIRTABLE.guests.tableId, updates);
+}
+
+/** Maps a guest-provided household email to an Invitations-table update. Defence in depth: re-validates the email. */
+export function buildHouseholdEmailUpdate(invitation: Invitation, email: string): RecordUpdate {
+  if (!isLikelyEmail(email)) {
+    throw new RsvpValidationError(`Email for invitation ${invitation.id} is not a valid email`);
+  }
+  return { id: invitation.id, fields: { [AIRTABLE.invitations.fields.email]: email } };
+}
+
+export async function writeHouseholdEmail(client: AirtableClient, update: RecordUpdate): Promise<void> {
+  await client.updateRecords(AIRTABLE.invitations.tableId, [update]);
 }

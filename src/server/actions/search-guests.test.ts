@@ -39,6 +39,7 @@ describe('searchGuests', () => {
         {
           id: id('Biggs'),
           household: 'The Biggs Family',
+          hasEmailOnFile: true,
           guests: [
             { id: id('Grant'), name: 'Grant Biggs', hasPlusOne: true, attending: 'yes', plusOneName: 'Priya Raman' },
             { id: id('Mario'), name: 'Mario Biggs', hasPlusOne: false, attending: null },

@@ -2,9 +2,11 @@
 
 import { useEffect, useReducer, useRef, useState, useTransition, type FormEvent } from 'react';
 import { GuestRow } from '@/components/rsvp/guest-row';
+import { HouseholdEmailField } from '@/components/rsvp/household-email-field';
 import { PartyTally } from '@/components/rsvp/party-tally';
 import { useFocusOnMount } from '@/components/rsvp/use-focus-on-mount';
 import { Button } from '@/components/ui/button';
+import { isLikelyEmail } from '@/lib/email';
 import { initRosterState, partyHeadcount, rosterIssues, rosterReducer, toRsvpAnswers } from '@/lib/roster-state';
 import { submitRsvp } from '@/server/actions/submit-rsvp';
 import type { RosterHousehold } from '@/types/rsvp';
@@ -23,6 +25,7 @@ const SUBMIT_ERRORS = {
 } as const;
 
 const ISSUES_MESSAGE = 'Please answer for everyone in your party.';
+const EMAIL_ERROR = "That email address doesn't look right. Check it, or leave it blank.";
 
 export function GuestRoster({ household, backLabel, onBack, onRestart, onSubmitted }: GuestRosterProps) {
   const headingRef = useFocusOnMount<HTMLHeadingElement>();
@@ -33,6 +36,9 @@ export function GuestRoster({ household, backLabel, onBack, onRestart, onSubmitt
   const announceTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const [submitStatus, setSubmitStatus] = useState<'invalid' | 'error' | null>(null);
   const [pending, startTransition] = useTransition();
+  const [email, setEmail] = useState('');
+  const [emailError, setEmailError] = useState('');
+  const emailRef = useRef<HTMLInputElement>(null);
 
   const issues = rosterIssues(household, state);
   const issueByGuest = new Map(issues.map((issue) => [issue.guestId, issue.problem]));
@@ -57,6 +63,10 @@ export function GuestRoster({ household, backLabel, onBack, onRestart, onSubmitt
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setSubmitStatus(null);
+    const trimmedEmail = email.trim();
+    const emailInvalid = trimmedEmail !== '' && !isLikelyEmail(trimmedEmail);
+    setEmailError(emailInvalid ? EMAIL_ERROR : '');
+
     if (issues.length > 0) {
       setShowIssues(true);
       setSubmitAttempt((attempt) => attempt + 1);
@@ -67,9 +77,17 @@ export function GuestRoster({ household, backLabel, onBack, onRestart, onSubmitt
       announceTimer.current = setTimeout(() => setIssuesMessage(ISSUES_MESSAGE), 50);
       return;
     }
+    if (emailInvalid) {
+      emailRef.current?.focus();
+      return;
+    }
     startTransition(async () => {
       try {
-        const result = await submitRsvp({ invitationId: household.id, answers: toRsvpAnswers(household, state) });
+        const result = await submitRsvp({
+          invitationId: household.id,
+          answers: toRsvpAnswers(household, state),
+          ...(trimmedEmail ? { email: trimmedEmail } : {}),
+        });
         if (result.status === 'ok') onSubmitted(result.household);
         else setSubmitStatus(result.status);
       } catch {
@@ -99,6 +117,13 @@ export function GuestRoster({ household, backLabel, onBack, onRestart, onSubmitt
           />
         ))}
       </ul>
+      <HouseholdEmailField
+        ref={emailRef}
+        value={email}
+        onChange={setEmail}
+        error={emailError}
+        hasEmailOnFile={household.hasEmailOnFile}
+      />
       <PartyTally count={partyHeadcount(state)} />
       <p role="status" aria-live="assertive" className="text-center text-destructive empty:sr-only">
         {blockedByIssues ? issuesMessage : ''}

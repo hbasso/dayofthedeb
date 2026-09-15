@@ -2,7 +2,14 @@
 
 import { updateTag } from 'next/cache';
 import { getAirtableClient } from '@/lib/airtable/client';
-import { buildRsvpUpdates, respondedOnDate, RsvpValidationError, writeRsvp } from '@/lib/airtable/rsvp';
+import {
+  buildHouseholdEmailUpdate,
+  buildRsvpUpdates,
+  respondedOnDate,
+  RsvpValidationError,
+  writeHouseholdEmail,
+  writeRsvp,
+} from '@/lib/airtable/rsvp';
 import { requireSiteSession } from '@/lib/auth';
 import { getInvitations, GUEST_LIST_TAG } from '@/lib/guest-list';
 import { toRosterHousehold, withAnswers } from '@/lib/roster-view';
@@ -25,7 +32,21 @@ export async function submitRsvp(input: unknown): Promise<SubmitRsvpResult> {
     writeStarted = true;
     await writeRsvp(client, updates);
 
-    return { status: 'ok', household: withAnswers(toRosterHousehold(invitation), parsed.answers) };
+    let emailWritten = false;
+    if (parsed.email) {
+      try {
+        await writeHouseholdEmail(client, buildHouseholdEmailUpdate(invitation, parsed.email));
+        emailWritten = true;
+      } catch (error) {
+        console.error('household email write failed', error);
+      }
+    }
+
+    const household = withAnswers(toRosterHousehold(invitation), parsed.answers);
+    return {
+      status: 'ok',
+      household: { ...household, hasEmailOnFile: household.hasEmailOnFile || emailWritten },
+    };
   } catch (error) {
     if (error instanceof RsvpValidationError) return { status: 'invalid' };
     console.error('submitRsvp failed', error);

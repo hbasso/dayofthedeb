@@ -13,6 +13,7 @@ export interface RosterHousehold {
   id: string;
   household: string;
   guests: RosterGuest[];
+  hasEmailOnFile: boolean;
 }
 
 export interface RsvpAnswer {
@@ -24,6 +25,7 @@ export interface RsvpAnswer {
 export interface SubmitRsvpInput {
   invitationId: string;
   answers: RsvpAnswer[];
+  email?: string;
 }
 
 export type SearchGuestsResult =
