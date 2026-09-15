@@ -95,6 +95,17 @@ describe('submitRsvp', () => {
     if (result.status === 'ok') expect(result.household.hasEmailOnFile).toBe(true);
   });
 
+  it('leaves an existing household email untouched when the guest submits none', async () => {
+    mocks.getInvitations.mockResolvedValue([{ ...biggs, email: 'already@example.com' }, hunter]);
+
+    const result = await submitRsvp(validInput);
+
+    expect(mocks.updateRecords).toHaveBeenCalledTimes(1);
+    expect(mocks.updateRecords).toHaveBeenCalledWith(AIRTABLE.guests.tableId, expect.any(Array));
+    expect(result.status).toBe('ok');
+    if (result.status === 'ok') expect(result.household.hasEmailOnFile).toBe(true);
+  });
+
   it('rejects a submission with an invalid email without writing anything', async () => {
     expect(await submitRsvp({ ...validInput, email: 'not-an-email' })).toEqual({ status: 'invalid' });
     expectNoWrite();

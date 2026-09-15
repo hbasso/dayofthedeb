@@ -33,8 +33,8 @@ export function isLikelyEmail(value: string): boolean {
   const domainPart = normalized.slice(atIndex + 1);
   if (localPart.length === 0 || domainPart.length === 0) return false;
 
-  const dotIndex = domainPart.indexOf('.');
-  if (dotIndex <= 0 || dotIndex === domainPart.length - 1) return false;
+  // The dot must be interior, checking both ends: "sub.example." has an interior dot too.
+  if (!domainPart.includes('.') || domainPart.startsWith('.') || domainPart.endsWith('.')) return false;
 
   return true;
 }

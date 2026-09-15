@@ -22,6 +22,8 @@ describe('isLikelyEmail', () => {
     ['two @', 'two@@at.com'],
     ['spaces', 'spaces in@example.com'],
     ['trailing dot domain', 'trailing.dot@example.'],
+    ['trailing dot on a multi-label domain', 'user@sub.example.'],
+    ['leading dot domain', 'user@.example.com'],
     ['empty local part', '@example.com'],
     ['domain without dot', 'user@example'],
     ['too long', `${'a'.repeat(300)}@example.com`],
