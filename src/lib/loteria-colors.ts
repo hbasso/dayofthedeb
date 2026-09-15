@@ -49,6 +49,18 @@ export function contrastRatio(a: string, b: string): number | null {
   return (lighter + 0.05) / (darker + 0.05);
 }
 
+/** WCAG AA for normal-size text. */
+export const MIN_TEXT_CONTRAST = 4.5;
+
+/**
+ * Keeps a decorative color only where it stays legible as text; otherwise falls back.
+ * The card's accent can be any hue the art calls for, so the subtitle checks it first.
+ */
+export function readableAccent(accent: string, background: string, fallback: string): string {
+  const ratio = contrastRatio(accent, background);
+  return ratio !== null && ratio >= MIN_TEXT_CONTRAST ? accent : fallback;
+}
+
 export function readableInk(background: string, options?: { light?: string; dark?: string }): string {
   const dark = options?.dark ?? '#17110F';
   const light = options?.light ?? '#FFFCF6';

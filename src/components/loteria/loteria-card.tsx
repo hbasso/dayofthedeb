@@ -1,11 +1,11 @@
 import type { CSSProperties } from 'react';
 import Image from 'next/image';
-import { isHexColor, readableInk } from '@/lib/loteria-colors';
+import { isHexColor, readableAccent, readableInk } from '@/lib/loteria-colors';
 
 export interface LoteriaCardPalette {
   /** Art background behind the image. */
   background?: string;
-  /** Keyline + number + title ink. Defaults to whichever of ink/paper reads better on `background`. */
+  /** Keyline + number + title ink, printed on `paper`. Defaults to whatever reads on the paper. */
   ink?: string;
   /** Paper/margin color. */
   paper?: string;
@@ -52,13 +52,18 @@ export function LoteriaCard({
   const background = pickColor(palette?.background, DEFAULT_PALETTE.background);
   const paper = pickColor(palette?.paper, DEFAULT_PALETTE.paper);
   const accent = pickColor(palette?.accent, DEFAULT_PALETTE.accent);
-  const ink = pickColor(palette?.ink, readableInk(background));
+  // The title, number and keyline sit on the paper; the ® sits on the art. A dark
+  // art background must not bleach the title, so the two inks are chosen separately.
+  const ink = pickColor(palette?.ink, readableInk(paper));
+  const artInk = readableInk(background);
 
   const style = {
     '--loteria-background': background,
     '--loteria-paper': paper,
     '--loteria-accent': accent,
     '--loteria-ink': ink,
+    '--loteria-art-ink': artInk,
+    '--loteria-subtitle': readableAccent(accent, paper, ink),
   } as CSSProperties;
 
   return (
@@ -80,7 +85,7 @@ export function LoteriaCard({
           </span>
         )}
         {registered && (
-          <span className="absolute right-1.5 top-1.5 text-xs font-bold leading-none text-[var(--loteria-ink)]">®</span>
+          <span className="absolute right-1.5 top-1.5 text-xs font-bold leading-none text-[var(--loteria-art-ink)]">®</span>
         )}
       </div>
       <figcaption className="pt-2 text-center sm:pt-3">
@@ -88,7 +93,7 @@ export function LoteriaCard({
         <p className="font-loteria text-balance text-xl font-bold uppercase tracking-[0.18em] text-[var(--loteria-ink)] sm:text-2xl">
           {title}
         </p>
-        {subtitle && <p className="mt-1 text-sm text-[var(--loteria-accent)]">{subtitle}</p>}
+        {subtitle && <p className="mt-1 text-sm text-[var(--loteria-subtitle)]">{subtitle}</p>}
       </figcaption>
     </figure>
   );
