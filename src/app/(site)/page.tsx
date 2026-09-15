@@ -12,7 +12,8 @@ export default function HomePage() {
   return (
     <main className="mx-auto w-full max-w-5xl space-y-16 px-4 py-10 sm:py-16">
       <section className="space-y-6 text-center">
-        <p className="text-base font-semibold tracking-widest text-primary uppercase">You&apos;re invited</p>
+        {/* 20px bold counts as large text, where pink on cream (~3.9:1) meets WCAG AA. */}
+        <p className="text-xl font-bold tracking-widest text-primary uppercase">You&apos;re invited</p>
         <h1 className="font-display text-6xl leading-tight sm:text-7xl">{siteConfig.name}</h1>
         <p className="mx-auto max-w-xl text-xl text-muted-foreground">
           {date ? `${date} · ` : ''}
