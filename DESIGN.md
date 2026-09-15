@@ -219,11 +219,13 @@ A people-level rate ("620 of 800 guests answered") is fine to show too if you pr
 
 All informational content lives on two routes: the landing page (`/`) and the venue page (`/venue`). Both are Server Components with no data fetching; their content comes from typed config, not Airtable, so they render static / ISR and stay edge-cached. They sit behind the site password (Layer 1) like everything else, but the gate is only a cheap cookie check and does not defeat caching, so they stay fast during party-night and arrival-time traffic.
 
-**Landing (`/`)** is the general front door: the event basics (date, time, dress code), an optional `next/image` gallery strip, and clear links into the RSVP flow and the venue page. Schedule and dress-code detail live here as sections, not separate routes. The landing links to `/rsvp`; it does not itself hold the search.
+**Landing (`/`)** is the general front door: the event basics (date, time, dress code), an optional `next/image` gallery strip, and clear links into the RSVP flow and the venue page. Schedule and dress-code detail live here as sections, not separate routes. The landing links to `/rsvp`; it does not itself hold the search. Five honorees (names to be announced). Placeholder River Walk photos from Unsplash (credited) until the host's photos arrive. Every unconfirmed fact renders "To be announced" from config.
 
 **Venue (`/venue`)** opens with a short overview of Mexico Ceaty (what the place is, the private food-court concept, a hero image, the address, a map), then continues into the arrival logistics, which are the substantial part of the page and are described next.
 
 ### Getting to the venue
+
+Host decision (2026-09-14): parking is very limited, so the page recommends rideshare only. The primary card is "Take a rideshare"; Uber and Lyft buttons appear once directionsConfig.rideshare.dropoffCoordinates is set (never guessed), and until then an "Open the venue in Maps" button is shown. Parking and valet are secondary collapsible sections.
 
 Arrival at a downtown Riverwalk venue is genuinely complex: parking is in garages rather than a lot, the Riverwalk sits below street level so GPS often misroutes to the wrong level, and guests span every age and comfort with navigation. This lower part of the venue page moves a guest from "in the car" to "at the entrance" with as little reading as possible. It stays a clearly-marked section of its own so none of that arrival detail is lost by folding it into the venue page.
 
@@ -299,9 +301,11 @@ src/
 │  ├─ layout.tsx                    # fonts + ThemeProvider + shell (thin)
 │  ├─ globals.css                   # Tailwind v4 + shadcn tokens, palette lives here
 │  ├─ unlock/page.tsx               # site password gate (Layer 1)
-│  ├─ page.tsx                      # general landing: event basics, gallery, links to RSVP + venue
-│  ├─ rsvp/page.tsx                 # RSVP flow on one route: search, select, roster, submit (client-driven)
-│  ├─ venue/page.tsx                # venue overview + map + getting-here (parking, wayfinding, accessibility)
+│  ├─ (site)/
+│  │  ├─ layout.tsx                 # header + footer shell for content pages
+│  │  ├─ page.tsx                   # general landing: event basics, gallery, links to RSVP + venue
+│  │  ├─ rsvp/page.tsx              # RSVP flow on one route: search, select, roster, submit (client-driven)
+│  │  └─ venue/page.tsx             # venue overview + map + getting-here (rideshare, parking, wayfinding, accessibility)
 │  ├─ admin/
 │  │  ├─ login/page.tsx             # admin password gate (Layer 3)
 │  │  └─ page.tsx                   # full guest list + filtering + export + Airtable link
@@ -320,13 +324,15 @@ src/
 │  │  ├─ party-tally.tsx            # headcount
 │  │  └─ rsvp-confirmation.tsx      # summary
 │  ├─ content/
-│  │  ├─ venue-map.tsx              # map + pin(s) on the venue page
+│  │  ├─ tbd.tsx                    # renders a confirmed fact or a "to be announced" placeholder
 │  │  ├─ gallery-grid.tsx
-│  │  ├─ schedule-list.tsx
-│  │  ├─ arrival-options.tsx        # driving / valet / rideshare / walking
-│  │  ├─ parking-info.tsx           # garages, rates, addresses (from config)
-│  │  ├─ wayfinding-steps.tsx       # numbered steps, garage to entrance
-│  │  └─ open-in-maps-button.tsx    # platform deep link; parking vs venue target
+│  │  ├─ venue-overview.tsx         # venue name, address, description, entrance note
+│  │  ├─ venue-map.tsx              # map + pin(s) on the venue page
+│  │  ├─ rideshare-card.tsx         # primary "Take a rideshare" card; Uber/Lyft or Open in Maps
+│  │  ├─ arrival-options.tsx        # collapsible sections: walking / step-free / parking / valet
+│  │  ├─ wayfinding-steps.tsx       # numbered steps, drop-off to entrance
+│  │  ├─ event-notices.tsx          # event-day notices (e.g. nearby large event)
+│  │  └─ open-in-maps-button.tsx    # platform-aware deep link (Apple Maps vs Google Maps) to the venue
 │  ├─ admin/
 │  │  ├─ admin-dashboard.tsx        # composes header, stats, exports, duplicates, table (server)
 │  │  ├─ admin-header.tsx           # title + refresh + sign-out
@@ -340,7 +346,10 @@ src/
 │  ├─ auth/
 │  │  ├─ unlock-form.tsx            # client: site password entry
 │  │  └─ admin-login-form.tsx       # client: admin password entry
-│  ├─ layout/                       # site-header, site-footer
+│  ├─ layout/
+│  │  ├─ site-header.tsx            # nav (Home / RSVP / Venue)
+│  │  ├─ nav-link.tsx               # header link, highlights the current page
+│  │  └─ site-footer.tsx
 │  └─ theme-provider.tsx            # next-themes wrapper (client)
 ├─ lib/
 │  ├─ airtable/
@@ -363,6 +372,9 @@ src/
 │  ├─ roster-state.ts               # pure roster reducer, headcount, validation
 │  ├─ rsvp-input.ts                 # parses untrusted submit input
 │  ├─ dates.ts                      # date formatting
+│  ├─ venue.ts                      # pure: venue address lines, single line, map query
+│  ├─ maps.ts                       # pure: Google/Apple Maps and Uber/Lyft deep-link builders
+│  ├─ platform.ts                   # pure: isApplePlatform(userAgent)
 │  └─ utils.ts                      # cn(), shadcn helpers
 ├─ server/actions/
 │  ├─ unlock-site.ts                # 'use server': validate site password, set cookie
@@ -376,6 +388,7 @@ src/
 │  └─ rsvp.ts                       # client-safe RSVP types and action results
 └─ config/
    ├─ site.ts                       # event name, date, venue, deadline (one source)
+   ├─ gallery.ts                    # placeholder River Walk photos (Unsplash, credited)
    └─ directions.ts                 # typed arrival, parking, wayfinding content
 ```
 
