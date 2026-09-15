@@ -1,25 +1,35 @@
 import Link from 'next/link';
+import { EventDetails } from '@/components/content/event-details';
+import { GalleryGrid } from '@/components/content/gallery-grid';
+import { Honorees } from '@/components/content/honorees';
 import { buttonVariants } from '@/components/ui/button';
 import { siteConfig } from '@/config/site';
-
-const swatches = ['bg-primary', 'bg-secondary', 'bg-link', 'bg-success', 'bg-turquoise', 'bg-sunny', 'bg-foreground'];
+import { formatLongDate } from '@/lib/dates';
 
 export default function HomePage() {
+  const date = formatLongDate(siteConfig.event.date);
+
   return (
-    <main className="mx-auto flex min-h-dvh max-w-2xl flex-col items-center justify-center gap-6 px-4 py-16 text-center">
-      <p className="text-sm font-semibold uppercase tracking-widest text-muted-foreground">
-        {siteConfig.venue.name} · {siteConfig.venue.city}, {siteConfig.venue.region}
-      </p>
-      <h1 className="font-display text-5xl sm:text-6xl">{siteConfig.name}</h1>
-      <p className="text-lg text-muted-foreground">{siteConfig.description}</p>
-      <div className="flex gap-2" aria-hidden>
-        {swatches.map((swatch) => (
-          <span key={swatch} className={`size-8 rounded-full ${swatch}`} />
-        ))}
-      </div>
-      <Link href="/rsvp" className={buttonVariants({ size: 'lg', className: 'h-12 px-8 text-base' })}>
-        RSVP
-      </Link>
+    <main className="mx-auto w-full max-w-5xl space-y-16 px-4 py-10 sm:py-16">
+      <section className="space-y-6 text-center">
+        <p className="text-base font-semibold tracking-widest text-primary uppercase">You&apos;re invited</p>
+        <h1 className="font-display text-6xl leading-tight sm:text-7xl">{siteConfig.name}</h1>
+        <p className="mx-auto max-w-xl text-xl text-muted-foreground">
+          {date ? `${date} · ` : ''}
+          {siteConfig.venue.name}, {siteConfig.venue.city}
+        </p>
+        <div className="mx-auto flex max-w-md flex-col gap-3 sm:flex-row">
+          <Link href="/rsvp" className={buttonVariants({ className: 'h-12 flex-1 text-base' })}>
+            RSVP
+          </Link>
+          <Link href="/venue" className={buttonVariants({ variant: 'outline', className: 'h-12 flex-1 text-base' })}>
+            Venue &amp; directions
+          </Link>
+        </div>
+      </section>
+      <Honorees />
+      <EventDetails />
+      <GalleryGrid />
     </main>
   );
 }
