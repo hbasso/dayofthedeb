@@ -15,7 +15,7 @@ describe('getAdminPassword', () => {
     vi.stubEnv('ADMIN_PASSWORD', '');
     expect(() => getAdminPassword()).toThrow(/ADMIN_PASSWORD/);
     vi.stubEnv('ADMIN_PASSWORD', 'x'.repeat(MIN_ADMIN_PASSWORD_LENGTH - 1));
-    expect(() => getAdminPassword()).toThrow(/at least 12/);
+    expect(() => getAdminPassword()).toThrow(`at least ${MIN_ADMIN_PASSWORD_LENGTH} characters`);
   });
 
   it('rejects an admin password matching the site password, case/space-insensitively', () => {

@@ -14,6 +14,7 @@ vi.mock('@/lib/auth', async (importOriginal) => ({
 }));
 vi.mock('next/headers', () => ({ cookies: vi.fn(async () => ({})) }));
 
+import { MIN_ADMIN_PASSWORD_LENGTH } from '@/lib/env';
 import { adminLogin, adminLogout } from '@/server/actions/admin-login';
 
 const ADMIN_PASSWORD = 'Correct-Horse-Battery';
@@ -34,7 +35,7 @@ beforeEach(() => {
 describe('adminLogin', () => {
   it('reports a setup error and does not save a session when ADMIN_PASSWORD is missing or too short', async () => {
     const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
-    vi.stubEnv('ADMIN_PASSWORD', 'short');
+    vi.stubEnv('ADMIN_PASSWORD', 'x'.repeat(MIN_ADMIN_PASSWORD_LENGTH - 1));
     expect(await adminLogin({}, form({ password: ADMIN_PASSWORD }))).toEqual({
       error: 'Admin sign-in is not set up yet. Check ADMIN_PASSWORD.',
     });

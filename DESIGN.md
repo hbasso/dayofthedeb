@@ -140,7 +140,7 @@ Not a security boundary. Runs entirely behind Layer 1. Identifies which househol
 Protects the guest list and export from ordinary guests, all of whom hold the site password.
 
 - The proxy decides admin paths (/admin, /admin/*, /api/export) before the site gate. The admin password alone grants access (host decision): /admin/login is public, other admin pages redirect to /admin/login?next=…, and /api/export answers 401 without a valid admin_session cookie.
-- /admin/login posts to an adminLogin server action validating ADMIN_PASSWORD (exact, constant-time, at least 12 characters) and sets a sealed admin_session cookie (7 days). A site session never grants admin and vice versa.
+- /admin/login posts to an adminLogin server action validating ADMIN_PASSWORD (exact, constant-time, at least 4 characters) and sets a sealed admin_session cookie (7 days). A site session never grants admin and vice versa.
 - requireAdminSession() runs before any admin data read and at the start of every admin server action; the export route validates the admin cookie itself.
 
 ### Security requirements
@@ -404,7 +404,7 @@ src/
 AIRTABLE_TOKEN=            # personal access token, scoped to the base
 AIRTABLE_BASE_ID=
 SITE_PASSWORD=            # shared, printed on the invitation
-ADMIN_PASSWORD=           # admin area: host, planner, caterer (at least 12 characters)
+ADMIN_PASSWORD=           # admin area: host, planner, caterer (at least 4 characters)
 AUTH_SECRET=             # HMAC key for signing session cookies
 ```
 
