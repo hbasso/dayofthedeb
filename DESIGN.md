@@ -164,7 +164,7 @@ The proxy runs per request (Node runtime) and only unseals a cookie, which is ch
 The visual flow is demonstrated in the standalone HTML prototype delivered earlier. Production differs in three ways: the whole flow lives on a single generic route (`/rsvp`) with no per-household URL, search is server-side (see Architecture), and the plus-one is a checkbox-plus-name on the named guest rather than a separate row (see step 5). Behavior to implement:
 
 1. **Unlock.** Guest enters the site password (Layer 1). On success, continues to the landing page.
-2. **Search.** Guest types the first and last name of one member of their party. The search matches against member names and alt-names, not the household label. It returns every household containing a match.
+2. **Search.** Guest types a name of anyone in their party: a last name on its own is enough, and a first and last name narrows it. The search matches against member names and alt-names, not the household label. It returns every household containing a match.
 3. **Disambiguate.** If multiple households match a surname (e.g. three separate "Reyes" parties), each is shown as a selectable row previewing its named roster. The guest selects the correct one.
 4. **Roster.** The household's named guests are listed, each with a Yes / No control. Empty means no response yet.
 5. **Conditional plus-one.** For a guest whose `hasPlusOne` is checked, marking them attending reveals a "bringing a guest?" toggle; choosing yes reveals a name input that saves to `plusOneName`. If the guest flips to No (or answers no to the toggle), the name clears. Guests without `hasPlusOne` never see this. This is the only genuinely conditional piece of interaction in the app.
@@ -182,7 +182,7 @@ Server actions return a RosterHousehold projection (id, household, and per guest
 
 Normalize both the query and the stored names before comparing: lowercase, strip accents, trim, and include the `altNames` list. This handles accents (Héctor vs Hector), nicknames (Sue vs Susan), and casing. Implemented as pure functions in `lib/search.ts`.
 
-A query needs at least two words of two or more letters; each word must start a different word of the guest's name or alt names ("Dan Reyes" finds "Daniel Reyes"); apostrophes and periods are ignored and hyphens split words. The household label is not searched. Results are ranked (exact whole-word matches first) and capped at 10, and when more match the site asks the guest to type more of their name. There is no typo tolerance, so alt names matter.
+A query needs at least one word of two or more letters, so a last name on its own works ("Reyes" returns every Reyes household). Each word must start a different word of the guest's name or alt names ("Dan Reyes" finds "Daniel Reyes"); apostrophes and periods are ignored and hyphens split words. The household label is not searched. Results are ranked (exact whole-word matches first) and capped at 10, and when more match the site asks the guest to search again with a first and last name. There is no typo tolerance, so alt names matter.
 
 ### Editing an existing RSVP
 

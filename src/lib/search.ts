@@ -1,6 +1,8 @@
 import type { Guest, Invitation } from '@/types/domain';
 
-export const MIN_QUERY_TOKENS = 2;
+// One word is enough, so a guest can search by last name alone. Several households will often
+// share a surname; the results list shows each household's members so they can tell them apart.
+export const MIN_QUERY_TOKENS = 1;
 export const MIN_TOKEN_LENGTH = 2;
 export const MAX_QUERY_TOKENS = 6;
 export const MAX_SEARCH_RESULTS = 10;

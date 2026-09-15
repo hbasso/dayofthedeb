@@ -9,7 +9,7 @@ import { searchGuests } from '@/server/actions/search-guests';
 import type { SearchOutcome } from '@/types/rsvp';
 
 const MESSAGES = {
-  'invalid-query': 'Please enter the first and last name of someone in your party.',
+  'invalid-query': 'Please enter a name of at least two letters, like your last name.',
   'no-match': 'We couldn’t find that name. Try it the way it appears on your invitation, or check the spelling.',
   error: 'Search isn’t working right now. Please try again in a moment.',
 } as const;
@@ -56,11 +56,11 @@ export function NameSearchForm({ initialQuery = '', autoFocus = false, onFound }
   return (
     <form onSubmit={handleSubmit} noValidate className="space-y-4">
       <p id="guest-name-description" className="text-lg text-muted-foreground">
-        Type the first and last name of anyone in your party to find your invitation.
+        Search a last name, or a full name, for anyone in your party. You&apos;ll pick your household next.
       </p>
       <div className="space-y-2">
         <Label htmlFor="guest-name" className="text-base">
-          Your first and last name
+          Name on your invitation
         </Label>
         <Input
           ref={inputRef}

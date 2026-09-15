@@ -60,7 +60,7 @@ describe('searchGuests', () => {
   });
 
   it.each([
-    ['a single name', 'Biggs'],
+    ['a one-letter name', 'B'],
     ['a non-string', 42],
     ['an overlong query', `${'a'.repeat(150)} Biggs`],
   ])('rejects %s without reading the guest list', async (_label, query) => {

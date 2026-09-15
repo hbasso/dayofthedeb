@@ -24,7 +24,8 @@ export function SearchResults({ outcome, onSelect, onSearchAgain }: SearchResult
       </div>
       {outcome.truncated && (
         <p className="rounded-lg bg-muted p-3">
-          Lots of guests share that name, so we’re only showing some. Try adding more of your name, like your full last name.
+          Lots of guests share that name, so we’re only showing some. Search again with a first and last name to
+          narrow it down.
         </p>
       )}
       <ul className="space-y-3">

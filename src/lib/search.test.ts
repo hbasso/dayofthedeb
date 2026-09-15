@@ -44,15 +44,19 @@ describe('normalizeName', () => {
 });
 
 describe('isSearchableQuery', () => {
-  it('requires at least a first and last name', () => {
-    expect(isSearchableQuery('Musgrove')).toBe(false);
+  it('accepts a single name, so a last name on its own can be searched', () => {
+    expect(isSearchableQuery('Musgrove')).toBe(true);
     expect(isSearchableQuery('Emma Musgrove')).toBe(true);
+    expect(isSearchableQuery('')).toBe(false);
+    expect(isSearchableQuery('   ')).toBe(false);
   });
 
   it('requires every token to be at least MIN_TOKEN_LENGTH characters', () => {
     expect(MIN_TOKEN_LENGTH).toBe(2);
     expect(isSearchableQuery('Dan Reyes')).toBe(true);
     expect(isSearchableQuery('Jo Hunter')).toBe(true);
+    expect(isSearchableQuery('Ng')).toBe(true);
+    expect(isSearchableQuery('d')).toBe(false);
     expect(isSearchableQuery('d r')).toBe(false);
     expect(isSearchableQuery('a a')).toBe(false);
     expect(isSearchableQuery('D Reyes')).toBe(false);
@@ -115,8 +119,29 @@ describe('searchInvitations', () => {
     expect(households('The Musgroves')).toEqual([]);
   });
 
-  it('requires at least a first and last name', () => {
-    expect(households('Musgrove')).toEqual([]);
+  it('finds every household sharing a last name searched on its own', () => {
+    expect(households('Reyes')).toEqual(['inv1', 'inv2']);
+    expect(households('Musgrove')).toEqual(['inv3']);
+  });
+
+  it('matches a first name on its own too', () => {
+    expect(households('Mateo')).toEqual(['inv2']);
+  });
+
+  it('matches a last name by prefix and through accents', () => {
+    expect(households('Salin')).toEqual(['inv5']);
+    expect(households('Musgroves')).toEqual([]);
+  });
+
+  it('ranks an exact last-name match above a prefix match', () => {
+    const ranked: Invitation[] = [
+      { id: 'prefix', household: 'The Reyeses', guests: [guest('ga', 'Ana Reyeson')] },
+      { id: 'exact', household: 'The Reyes Family', guests: [guest('gb', 'Ana Reyes')] },
+    ];
+    expect(searchInvitations(ranked, 'Reyes').matches.map((invitation) => invitation.id)).toEqual(['exact', 'prefix']);
+  });
+
+  it('requires a name of some kind', () => {
     expect(households('   ')).toEqual([]);
   });
 
@@ -163,6 +188,6 @@ describe('searchInvitations', () => {
   });
 
   it('returns an untruncated empty result for an unsearchable query', () => {
-    expect(searchInvitations(invitations, 'Musgrove')).toEqual({ matches: [], truncated: false });
+    expect(searchInvitations(invitations, 'M')).toEqual({ matches: [], truncated: false });
   });
 });
