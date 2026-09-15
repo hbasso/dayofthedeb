@@ -9,16 +9,18 @@ export function Honorees() {
   const countWord = NUMBER_WORDS[count] ?? String(count);
 
   return (
-    <section aria-labelledby="honorees-heading" className="space-y-6 text-center">
-      <h2 id="honorees-heading" className="font-display text-3xl">
+    // The heading is visually hidden: on the hero the cards speak for themselves,
+    // but screen readers still need to know what this group of cards is.
+    <section aria-labelledby="honorees-heading">
+      <h2 id="honorees-heading" className="sr-only">
         Celebrating our {countWord} débutantes
       </h2>
       {/* Flex-wrap, not a grid: a short last row (5 cards over 2 or 3 columns) stays centered. */}
-      <ul className="flex flex-wrap justify-center gap-4">
+      <ul className="flex flex-wrap justify-center gap-3 sm:gap-4">
         {honorees.map((honoree) => (
           <li
             key={honoree.number}
-            className="w-[calc(50%-0.5rem)] max-w-56 sm:w-[calc(33.333%-0.667rem)] lg:w-[calc(20%-0.8rem)]"
+            className="w-[calc(50%-0.375rem)] max-w-44 sm:w-[calc(33.333%-0.667rem)] sm:max-w-52 lg:w-[calc(20%-0.8rem)] lg:max-w-64"
           >
             <LoteriaCard
               number={honoree.number}
