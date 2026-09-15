@@ -1,5 +1,8 @@
 import type { LoteriaCardPalette } from '@/components/loteria/loteria-card';
 
+// Not rendered right now: the hero shows the finished card artwork (src/config/deb-cards.ts).
+// Kept for if we go back to building the deb cards with the LoteriaCard component.
+
 export interface Honoree {
   /** Card number, 1 through 5. */
   number: number;

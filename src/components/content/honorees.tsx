@@ -1,5 +1,5 @@
-import { LoteriaCard } from '@/components/loteria/loteria-card';
-import { honorees } from '@/config/honorees';
+import Image from 'next/image';
+import { debCards } from '@/config/deb-cards';
 import { siteConfig } from '@/config/site';
 
 const NUMBER_WORDS = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten'];
@@ -15,19 +15,18 @@ export function Honorees() {
       <h2 id="honorees-heading" className="sr-only">
         Celebrating our {countWord} débutantes
       </h2>
-      {/* Flex-wrap, not a grid: a short last row (5 cards over 2 or 3 columns) stays centered. */}
+      {/* Flex-wrap, not a grid: a short last row stays centered. */}
       <ul className="flex flex-wrap justify-center gap-3 sm:gap-4">
-        {honorees.map((honoree) => (
+        {debCards.map((card) => (
           <li
-            key={honoree.number}
-            className="w-[calc(50%-0.375rem)] max-w-44 sm:w-[calc(33.333%-0.667rem)] sm:max-w-52 lg:w-[calc(20%-0.8rem)] lg:max-w-64"
+            key={card.id}
+            className="w-[calc(50%-0.375rem)] max-w-44 sm:w-[calc(33.333%-0.667rem)] sm:max-w-52 lg:w-[calc(16.666%-0.834rem)] lg:max-w-56"
           >
-            <LoteriaCard
-              number={honoree.number}
-              title={honoree.name ?? 'La Debutante'}
-              image={honoree.image ?? undefined}
-              placeholderLabel={honoree.name ? 'Photo to come' : 'Name and photo to come'}
-              palette={honoree.palette}
+            <Image
+              src={card.src}
+              alt={card.alt}
+              sizes="(min-width: 1024px) 16vw, (min-width: 640px) 33vw, 50vw"
+              className="h-auto w-full rounded-sm shadow-lg shadow-black/30"
             />
           </li>
         ))}
