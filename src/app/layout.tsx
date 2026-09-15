@@ -1,11 +1,12 @@
 import type { Metadata } from 'next';
-import { Fraunces, Source_Sans_3 } from 'next/font/google';
+import { Fraunces, Jost, Source_Sans_3 } from 'next/font/google';
 import { ThemeProvider } from '@/components/theme-provider';
 import { siteConfig } from '@/config/site';
 import './globals.css';
 
 const display = Fraunces({ subsets: ['latin'], variable: '--font-fraunces', axes: ['opsz'] });
 const text = Source_Sans_3({ subsets: ['latin'], variable: '--font-source-sans' });
+const loteria = Jost({ subsets: ['latin'], variable: '--font-jost' });
 
 export const metadata: Metadata = {
   title: siteConfig.name,
@@ -15,7 +16,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" suppressHydrationWarning className={`${display.variable} ${text.variable}`}>
+    <html lang="en" suppressHydrationWarning className={`${display.variable} ${text.variable} ${loteria.variable}`}>
       <body className="min-h-dvh bg-background font-sans text-foreground antialiased">
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false} disableTransitionOnChange>
           {children}
