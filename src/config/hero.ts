@@ -1,4 +1,4 @@
-import heroPhoto from '../../public/RiverwalkBoat.webp';
+import heroPhoto from '../../public/NightRiverWalk.webp';
 
 /**
  * The home page banner. Imported rather than referenced by URL: the site gate would
