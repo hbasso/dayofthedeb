@@ -1,5 +1,7 @@
 import type { Metadata } from 'next';
+import { Suspense } from 'react';
 import { RsvpFlow } from '@/components/rsvp/rsvp-flow';
+import { WarmGuestList } from '@/components/rsvp/warm-guest-list';
 import { siteConfig } from '@/config/site';
 import { formatEventDate } from '@/lib/dates';
 
@@ -17,6 +19,10 @@ export default function RsvpPage() {
         {deadline && <p className="text-lg text-muted-foreground">Please respond by {deadline}.</p>}
       </header>
       <RsvpFlow />
+      {/* Warms the guest-list cache alongside the page; renders nothing either way. */}
+      <Suspense fallback={null}>
+        <WarmGuestList />
+      </Suspense>
     </main>
   );
 }

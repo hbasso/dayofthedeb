@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState, useTransition, type FormEvent } from 'react';
+import { SearchSkeleton } from '@/components/rsvp/search-skeleton';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -84,6 +85,10 @@ export function NameSearchForm({ initialQuery = '', autoFocus = false, onFound }
       <Button type="submit" disabled={pending} className="h-12 w-full text-base">
         {pending ? 'Searching…' : 'Find my invitation'}
       </Button>
+      <p role="status" className="sr-only">
+        {pending ? 'Searching for your invitation.' : ''}
+      </p>
+      {pending && <SearchSkeleton />}
     </form>
   );
 }
