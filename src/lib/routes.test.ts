@@ -14,6 +14,10 @@ describe('isPublicPath', () => {
     expect(isPublicPath('/unlock')).toBe(true);
   });
 
+  it('treats the tab icon as public, since the browser fetches it before unlocking', () => {
+    expect(isPublicPath('/icon.png')).toBe(true);
+  });
+
   it('gates every other route', () => {
     for (const path of ['/', '/rsvp', '/venue', '/admin', '/admin/login', '/api/export', '/unlocked']) {
       expect(isPublicPath(path)).toBe(false);

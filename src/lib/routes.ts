@@ -1,4 +1,7 @@
-const PUBLIC_PATHS = ['/unlock'] as const;
+// The tab icon is fetched by the browser with no session of its own, and the page that needs it
+// most is /unlock, which a guest sees before unlocking. Without this the gate would redirect the
+// icon request and the tab would fall back to a blank page glyph.
+const PUBLIC_PATHS = ['/unlock', '/icon.png'] as const;
 const ADMIN_PATHS = ['/admin', '/api/export'] as const;
 
 export const ADMIN_HOME_PATH = '/admin';
