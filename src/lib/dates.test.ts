@@ -7,15 +7,29 @@ describe('formatEventDate', () => {
     expect(formatEventDate('2026-12-01')).toBe('December 1');
   });
 
+  it('reads a full timestamp as its calendar day rather than giving up', () => {
+    expect(formatEventDate('2026-11-15T14:30:00Z')).toBe('November 15');
+  });
+
+  it('resolves a timestamp in the event time zone, not UTC', () => {
+    // 8pm in San Antonio on the 27th, already the 28th in UTC.
+    expect(formatEventDate('2026-12-28T02:00:00Z')).toBe('December 27');
+  });
+
   it('returns null for a missing or unparseable date', () => {
     expect(formatEventDate(null)).toBeNull();
     expect(formatEventDate('soon')).toBeNull();
+    expect(formatEventDate('2026-02-30')).toBeNull();
   });
 });
 
 describe('formatLongDate', () => {
   it('formats a date-only string with weekday, month, day, and year', () => {
     expect(formatLongDate('2026-12-05')).toBe('Saturday, December 5, 2026');
+  });
+
+  it('formats a full timestamp too', () => {
+    expect(formatLongDate('2026-12-05T18:45:00.000Z')).toBe('Saturday, December 5, 2026');
   });
 
   it('returns null for missing or invalid dates', () => {
