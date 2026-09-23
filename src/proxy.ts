@@ -1,5 +1,12 @@
 import { NextResponse, type NextRequest } from 'next/server';
-import { ADMIN_LOGIN_PATH, isAdminLoginPath, isAdminPath, isPublicPath, normalizeForGate } from '@/lib/routes';
+import {
+  ADMIN_LOGIN_PATH,
+  isAdminLoginPath,
+  isAdminPath,
+  isPublicPath,
+  normalizeForGate,
+  REJECTED_GATE_PATH,
+} from '@/lib/routes';
 import { ADMIN_SESSION_COOKIE, isAdminSealValid, isSiteSealValid, SITE_SESSION_COOKIE } from '@/lib/session';
 
 function redirectWithNext(request: NextRequest, pathname: string): NextResponse {
@@ -12,6 +19,12 @@ function redirectWithNext(request: NextRequest, pathname: string): NextResponse 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const gatePath = normalizeForGate(pathname);
+
+  // A decoded path carrying . or .. segments doesn't say where the router would actually land, so
+  // refuse it outright. 404 denies as hard as a redirect would while revealing nothing: sending an
+  // ordinary guest who fat-fingered a URL to the admin sign-in is a dead end that also advertises
+  // the admin area. The sentinel stays an admin path so the gates below still deny it by default.
+  if (gatePath === REJECTED_GATE_PATH) return new NextResponse(null, { status: 404 });
 
   // Admin area: the admin password alone grants access (no invitation password needed).
   if (isAdminPath(gatePath)) {

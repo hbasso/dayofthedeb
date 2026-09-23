@@ -1,7 +1,7 @@
 'use server';
 
 import { redirect } from 'next/navigation';
-import { getAdminSession, passwordsMatch } from '@/lib/auth';
+import { getAdminSession, normalizeAdminPassword, passwordsMatch } from '@/lib/auth';
 import { getAdminPassword } from '@/lib/env';
 import { ADMIN_LOGIN_PATH, safeAdminNextPath } from '@/lib/routes';
 
@@ -19,7 +19,10 @@ export async function adminLogin(_prev: AdminLoginState, formData: FormData): Pr
   }
 
   const input = formData.get('password');
-  if (typeof input !== 'string' || !passwordsMatch(input, adminPassword)) {
+  if (
+    typeof input !== 'string' ||
+    !passwordsMatch(normalizeAdminPassword(input), normalizeAdminPassword(adminPassword))
+  ) {
     return { error: "That admin password isn't right." };
   }
 

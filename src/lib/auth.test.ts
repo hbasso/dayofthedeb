@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { normalizeSitePassword, passwordsMatch } from '@/lib/auth';
+import { normalizeAdminPassword, normalizeSitePassword, passwordsMatch } from '@/lib/auth';
 
 const redirectMock = vi.fn();
 vi.mock('next/navigation', () => ({
@@ -32,6 +32,12 @@ describe('passwordsMatch', () => {
 describe('normalizeSitePassword', () => {
   it('ignores surrounding whitespace and letter case', () => {
     expect(normalizeSitePassword('  Fiesta2026 ')).toBe('fiesta2026');
+  });
+});
+
+describe('normalizeAdminPassword', () => {
+  it('drops surrounding whitespace but keeps letter case', () => {
+    expect(normalizeAdminPassword('  Fiesta2026 ')).toBe('Fiesta2026');
   });
 });
 

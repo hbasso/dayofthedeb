@@ -51,10 +51,14 @@ describe('adminLogin', () => {
     expect(mocks.session.save).not.toHaveBeenCalled();
   });
 
-  it('is case-sensitive and does not trim', async () => {
+  it('is case-sensitive', async () => {
     expect((await adminLogin({}, form({ password: ADMIN_PASSWORD.toLowerCase() }))).error).toBeDefined();
-    expect((await adminLogin({}, form({ password: ` ${ADMIN_PASSWORD}` }))).error).toBeDefined();
     expect(mocks.session.save).not.toHaveBeenCalled();
+  });
+
+  it('accepts a password with surrounding whitespace, which is never intentional', async () => {
+    await expect(adminLogin({}, form({ password: `  ${ADMIN_PASSWORD} ` }))).rejects.toThrow('NEXT_REDIRECT');
+    expect(mocks.session.save).toHaveBeenCalled();
   });
 
   it('saves the admin session and redirects to a safe admin path', async () => {

@@ -18,6 +18,15 @@ export function normalizeSitePassword(value: string): string {
   return value.trim().toLowerCase();
 }
 
+/**
+ * The admin password is typed by the host, not printed, so case still counts. Whitespace does
+ * not: a value pasted into the Vercel env UI with a trailing space would otherwise never match
+ * anything the host could type, locking them out of /admin with only "that isn't right" to go on.
+ */
+export function normalizeAdminPassword(value: string): string {
+  return value.trim();
+}
+
 export async function getSiteSession() {
   return getIronSession<SiteSession>(await cookies(), siteSessionOptions());
 }
