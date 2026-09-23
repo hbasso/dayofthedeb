@@ -22,12 +22,14 @@ export function UnlockForm({ next }: { next: string }) {
           type="text"
           required
           autoComplete="off"
-          autoCapitalize="none"
+          autoCapitalize="characters"
           autoCorrect="off"
           spellCheck={false}
           aria-invalid={state.error ? true : undefined}
           aria-describedby={state.error ? 'password-error' : undefined}
-          className="h-12 text-lg"
+          // The password is printed in caps on the invitation, so the field shows caps back.
+          // Case never decides the match: normalizeSitePassword folds both sides.
+          className="h-12 text-lg tracking-wider uppercase placeholder:normal-case"
         />
       </div>
       {state.error && (

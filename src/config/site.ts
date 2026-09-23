@@ -27,6 +27,8 @@ export interface SiteConfig {
     startTime: string | null;
     endTime: string | null;
     dressCode: string | null;
+    /** Pinterest board of outfit ideas for the dress code. null when there is none. */
+    inspirationBoardUrl: string | null;
   };
   /** YYYY-MM-DD. null until the host confirms. */
   rsvpDeadline: string | null;
@@ -43,10 +45,14 @@ export const siteConfig: SiteConfig = {
     names: [],
   },
   event: {
-    date: null,
+    date: '2026-12-27',
     startTime: null,
     endTime: null,
-    dressCode: null,
+    dressCode: 'Vaquera chic',
+    // The public board URL, deliberately not the pin.it share link: that one carries an
+    // invite_code that invites whoever opens it to collaborate on the board, and this goes
+    // out to every guest.
+    inspirationBoardUrl: 'https://www.pinterest.com/anabellebasso/day-of-the-deb/',
   },
   rsvpDeadline: null,
   venue: {

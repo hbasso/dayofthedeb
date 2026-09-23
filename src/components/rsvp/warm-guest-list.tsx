@@ -14,8 +14,10 @@ import { getInvitations } from '@/lib/guest-list';
  * its own errors.
  */
 export async function WarmGuestList() {
+  // Outside the try: during prerendering connection() aborts by design, and that signal is
+  // React's to handle. Catching it here logged a phantom Airtable failure on every build.
+  await connection();
   try {
-    await connection();
     await getInvitations();
   } catch (error) {
     console.error('WarmGuestList failed to prefetch the guest list', error);
