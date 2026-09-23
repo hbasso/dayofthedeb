@@ -16,7 +16,7 @@ export function VenueOverview() {
             {line}
           </span>
         ))}
-        <span className="block text-muted-foreground">Inside the Shops at Rivercenter on the River Walk</span>
+        {venue.landmark && <span className="block text-muted-foreground">{venue.landmark}</span>}
       </address>
       <p className="text-lg">
         <Tbd value={venue.description} placeholder="More about the venue coming soon." />

@@ -6,6 +6,8 @@ export interface VenueInfo {
   city: string;
   region: string;
   postalCode: string;
+  /** Where the address sits, shown under it. null when there is no landmark worth naming. */
+  landmark: string | null;
   /** Short description for the venue page. null until the host confirms. */
   description: string | null;
   /** Which entrance guests should use. null until the host confirms. */
@@ -62,6 +64,7 @@ export const siteConfig: SiteConfig = {
     city: 'San Antonio',
     region: 'TX',
     postalCode: '78205',
+    landmark: 'Inside the Shops at Rivercenter on the River Walk',
     description: null,
     entranceNote: null,
   },

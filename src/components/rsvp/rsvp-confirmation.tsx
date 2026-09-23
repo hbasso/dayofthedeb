@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useFocusOnMount } from '@/components/rsvp/use-focus-on-mount';
-import { buttonVariants } from '@/components/ui/button';
+import { buttonClass } from '@/lib/button-class';
 import { siteConfig } from '@/config/site';
 import { formatEventDate } from '@/lib/dates';
 import type { RosterHousehold } from '@/types/rsvp';
@@ -53,11 +53,11 @@ export function RsvpConfirmation({ household }: { household: RosterHousehold }) 
       <div className="grid gap-3 sm:grid-cols-2">
         <Link
           href="/"
-          className={buttonVariants({ variant: 'outline', className: 'h-auto min-h-12 w-full py-2 text-center text-base whitespace-normal' })}
+          className={buttonClass({ variant: 'outline', className: 'h-auto min-h-12 w-full py-2 text-center text-base whitespace-normal' })}
         >
           Back to home
         </Link>
-        <Link href="/venue" className={buttonVariants({ className: 'h-auto min-h-12 w-full py-2 text-center text-base whitespace-normal' })}>
+        <Link href="/venue" className={buttonClass({ className: 'h-auto min-h-12 w-full py-2 text-center text-base whitespace-normal' })}>
           Venue &amp; directions
         </Link>
       </div>

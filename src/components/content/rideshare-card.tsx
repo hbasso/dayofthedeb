@@ -1,10 +1,16 @@
 import { OpenInMapsButton } from '@/components/content/open-in-maps-button';
 import { Tbd } from '@/components/content/tbd';
-import { buttonVariants } from '@/components/ui/button';
+import { buttonClass } from '@/lib/button-class';
 import { directionsConfig } from '@/config/directions';
 import { siteConfig } from '@/config/site';
 import { lyftDropoffUrl, uberDropoffUrl } from '@/lib/maps';
 import { venueMapQuery, venueSingleLine } from '@/lib/venue';
+
+// The outline face is cream, and the section's light-on-pink text would otherwise cascade onto it.
+const rideButton = buttonClass({
+  variant: 'outline',
+  className: 'h-auto min-h-12 w-full py-2 text-center text-base whitespace-normal text-foreground',
+});
 
 export function RideshareCard() {
   const { rideshare } = directionsConfig;
@@ -33,41 +39,28 @@ export function RideshareCard() {
         )}
       </div>
       <div className="grid gap-3 sm:grid-cols-2">
-        {dropoff ? (
+        {/* The ride apps need a drop-off pin to deep-link to; Maps only needs the address, so it
+            shows either way and spans the row on its own when the pin isn't set yet. */}
+        {dropoff && (
           <>
             <a
               href={uberDropoffUrl(dropoff, venue.name, venueSingleLine(venue))}
               target="_blank"
               rel="noopener noreferrer"
-              className={buttonVariants({
-                variant: 'outline',
-                className: 'h-auto min-h-12 w-full py-2 text-center text-base whitespace-normal text-foreground',
-              })}
+              className={rideButton}
             >
               Request an Uber
               <span className="sr-only"> (opens in a new tab)</span>
             </a>
-            <a
-              href={lyftDropoffUrl(dropoff)}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={buttonVariants({
-                variant: 'outline',
-                className: 'h-auto min-h-12 w-full py-2 text-center text-base whitespace-normal text-foreground',
-              })}
-            >
+            <a href={lyftDropoffUrl(dropoff)} target="_blank" rel="noopener noreferrer" className={rideButton}>
               Request a Lyft
               <span className="sr-only"> (opens in a new tab)</span>
             </a>
-            <div className="sm:col-span-2">
-              <OpenInMapsButton query={venueMapQuery(venue)} label="Open the venue in Maps" variant="outline" />
-            </div>
           </>
-        ) : (
-          <div className="sm:col-span-2">
-            <OpenInMapsButton query={venueMapQuery(venue)} label="Open the venue in Maps" variant="outline" />
-          </div>
         )}
+        <div className="sm:col-span-2">
+          <OpenInMapsButton query={venueMapQuery(venue)} label="Open the venue in Maps" variant="outline" />
+        </div>
       </div>
     </section>
   );

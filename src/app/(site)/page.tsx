@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { EventDetails } from '@/components/content/event-details';
 import { GalleryGrid } from '@/components/content/gallery-grid';
 import { Honorees } from '@/components/content/honorees';
-import { buttonVariants } from '@/components/ui/button';
+import { buttonClass } from '@/lib/button-class';
 import { heroImage } from '@/config/hero';
 import { siteConfig } from '@/config/site';
 import { formatLongDate } from '@/lib/dates';
@@ -39,7 +39,7 @@ export default function HomePage() {
           <div className="mx-auto flex max-w-md flex-col gap-3 sm:max-w-xl sm:flex-row">
             <Link
               href="/rsvp"
-              className={buttonVariants({
+              className={buttonClass({
                 className: 'h-auto min-h-12 flex-1 py-2 text-center text-base whitespace-normal sm:min-h-14 sm:text-lg',
               })}
             >
@@ -47,7 +47,7 @@ export default function HomePage() {
             </Link>
             <Link
               href="/venue"
-              className={buttonVariants({
+              className={buttonClass({
                 variant: 'outline',
                 // The hero's cream text would otherwise cascade onto the cream button face.
                 className:

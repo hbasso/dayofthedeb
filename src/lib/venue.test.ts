@@ -9,6 +9,7 @@ const venue: VenueInfo = {
   city: 'San Antonio',
   region: 'TX',
   postalCode: '78205',
+  landmark: null,
   description: null,
   entranceNote: null,
 };

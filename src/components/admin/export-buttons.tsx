@@ -1,4 +1,4 @@
-import { buttonVariants } from '@/components/ui/button';
+import { buttonClass } from '@/lib/button-class';
 
 export function ExportButtons() {
   return (
@@ -7,10 +7,10 @@ export function ExportButtons() {
         Downloads
       </h2>
       <div className="flex flex-wrap gap-3">
-        <a href="/api/export" download className={buttonVariants({ className: 'h-11 px-4 text-base' })}>
+        <a href="/api/export" download className={buttonClass({ className: 'h-11 px-4 text-base' })}>
           Download headcount CSV
         </a>
-        <a href="/api/export?scope=all" download className={buttonVariants({ variant: 'outline', className: 'h-11 px-4 text-base' })}>
+        <a href="/api/export?scope=all" download className={buttonClass({ variant: 'outline', className: 'h-11 px-4 text-base' })}>
           Download full guest list CSV
         </a>
       </div>
