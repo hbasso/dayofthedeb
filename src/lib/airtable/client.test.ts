@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { createAirtableClient, UPDATE_BATCH_SIZE } from '@/lib/airtable/client';
+import { BASE_RETRY_DELAY_MS, createAirtableClient, UPDATE_BATCH_SIZE } from '@/lib/airtable/client';
 
 type FetchLike = (url: string, init?: RequestInit) => Promise<Response>;
 
@@ -86,6 +86,24 @@ describe('retries', () => {
     ]);
     await client.listAllRecords('tblGuests', []);
     expect(sleep).toHaveBeenCalledWith(2000);
+  });
+
+  it.each([
+    ['an empty header', ''],
+    ['a zero header', '0'],
+    ['a negative header', '-5'],
+  ])('falls back to backoff for %s instead of retrying immediately', async (_label, header) => {
+    const delays: number[] = [];
+    const { client } = setup(
+      [json({ error: { type: 'RATE_LIMITED' } }, 429, { 'Retry-After': header }), json({ records: [] })],
+      {
+        sleep: async (ms) => {
+          delays.push(ms);
+        },
+      },
+    );
+    await client.listAllRecords('tblGuests', []);
+    expect(delays[0]).toBeGreaterThanOrEqual(BASE_RETRY_DELAY_MS);
   });
 
   it('throws after MAX_RETRIES exhausted on repeated 500s, including the status in the message', async () => {

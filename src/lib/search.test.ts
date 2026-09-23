@@ -37,6 +37,13 @@ describe('normalizeName', () => {
     expect(normalizeName('Héctor')).toBe('hector');
   });
 
+  it('folds Latin letters that NFD leaves whole, so they are not blanked out', () => {
+    expect(normalizeName('Bjørn Dahl')).toBe('bjorn dahl');
+    expect(normalizeName('Ædan')).toBe('aedan');
+    expect(normalizeName('Straße')).toBe('strasse');
+    expect(normalizeName('Łukasz')).toBe('lukasz');
+  });
+
   it('drops apostrophes and periods and splits on hyphens', () => {
     expect(normalizeName("Liam O'Brien-Garza")).toBe('liam obrien garza');
     expect(normalizeName('Liam O’Brien Jr.')).toBe('liam obrien jr');
@@ -51,21 +58,26 @@ describe('isSearchableQuery', () => {
     expect(isSearchableQuery('   ')).toBe(false);
   });
 
-  it('requires every token to be at least MIN_TOKEN_LENGTH characters', () => {
+  it('ignores words shorter than MIN_TOKEN_LENGTH instead of refusing the query', () => {
     expect(MIN_TOKEN_LENGTH).toBe(2);
     expect(isSearchableQuery('Dan Reyes')).toBe(true);
-    expect(isSearchableQuery('Jo Hunter')).toBe(true);
     expect(isSearchableQuery('Ng')).toBe(true);
+    expect(isSearchableQuery('Grant E Biggs')).toBe(true);
+    expect(isSearchableQuery('Maria J. Garcia')).toBe(true);
+    expect(isSearchableQuery('D Reyes')).toBe(true);
+  });
+
+  it('still refuses a query with no word long enough to match on', () => {
     expect(isSearchableQuery('d')).toBe(false);
     expect(isSearchableQuery('d r')).toBe(false);
     expect(isSearchableQuery('a a')).toBe(false);
-    expect(isSearchableQuery('D Reyes')).toBe(false);
   });
 
-  it('caps the number of query tokens at MAX_QUERY_TOKENS', () => {
-    expect(MAX_QUERY_TOKENS).toBe(6);
-    expect(isSearchableQuery('ab cd ef gh ij kl')).toBe(true);
-    expect(isSearchableQuery('ab cd ef gh ij kl mn')).toBe(false);
+  it('caps the number of usable query tokens at MAX_QUERY_TOKENS', () => {
+    expect(MAX_QUERY_TOKENS).toBe(8);
+    expect(isSearchableQuery('Maria de los Angeles Garcia Hernandez Lopez')).toBe(true);
+    expect(isSearchableQuery('ab cd ef gh ij kl mn op')).toBe(true);
+    expect(isSearchableQuery('ab cd ef gh ij kl mn op qr')).toBe(false);
   });
 });
 
@@ -113,6 +125,11 @@ describe('searchInvitations', () => {
   it('handles punctuation and multi-part surnames', () => {
     expect(households('Liam OBrien')).toEqual(['inv4']);
     expect(households('Maria Garza')).toEqual(['inv4']);
+  });
+
+  it('finds a household when the query carries a middle initial', () => {
+    expect(households('Emma J Musgrove')).toEqual(['inv3']);
+    expect(households('Emma J. Musgrove')).toEqual(['inv3']);
   });
 
   it('never matches on the household label', () => {

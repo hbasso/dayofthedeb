@@ -2,6 +2,9 @@ import { isLikelyEmail, normalizeEmail } from '@/lib/email';
 import { MAX_PLUS_ONE_NAME_LENGTH } from '@/lib/plus-one';
 import type { RsvpAnswer, SubmitRsvpInput } from '@/types/rsvp';
 
+// A ceiling on untrusted input, not a product limit. submitRsvp also requires the answer count to
+// equal the household's guest count, so a household above this could never submit. The largest in
+// the base is 7; raise this if one ever approaches 20.
 export const MAX_ANSWERS = 20;
 const RECORD_ID = /^rec[A-Za-z0-9]{14}$/;
 

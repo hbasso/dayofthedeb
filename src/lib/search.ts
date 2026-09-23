@@ -4,12 +4,37 @@ import type { Guest, Invitation } from '@/types/domain';
 // share a surname; the results list shows each household's members so they can tell them apart.
 export const MIN_QUERY_TOKENS = 1;
 export const MIN_TOKEN_LENGTH = 2;
-export const MAX_QUERY_TOKENS = 6;
+// Long Spanish names run past six words ("Maria de los Angeles Garcia Hernandez Lopez"). The cost
+// of matching is bounded by the guest's own word count, not the query's, so this is only a guard
+// against absurd input.
+export const MAX_QUERY_TOKENS = 8;
 export const MAX_SEARCH_RESULTS = 10;
 
 // Unicode combining diacritical marks block. NFD splits "í" into "i" plus a mark in this range.
 const COMBINING_MARKS_START = 0x300;
 const COMBINING_MARKS_END = 0x36f;
+
+/**
+ * Latin letters that NFD does not decompose, so the combining-mark filter can't reach them and
+ * the a-z0-9 pass would blank them out: "Bjorn" would never find "Bjorn" spelled with a slashed
+ * o, and a leading one silently vanishes ("AEdan" -> "dan").
+ */
+const LATIN_FOLDING: Record<string, string> = {
+  'ø': 'o',
+  'œ': 'oe',
+  'æ': 'ae',
+  'ß': 'ss',
+  'ł': 'l',
+  'đ': 'd',
+  'ð': 'd',
+  'þ': 'th',
+  'ħ': 'h',
+  'ı': 'i',
+};
+
+function foldLatin(value: string): string {
+  return [...value].map((char) => LATIN_FOLDING[char] ?? char).join('');
+}
 
 function stripAccents(value: string): string {
   return [...value.normalize('NFD')]
@@ -21,7 +46,7 @@ function stripAccents(value: string): string {
 }
 
 export function normalizeName(value: string): string {
-  return stripAccents(value.toLowerCase())
+  return stripAccents(foldLatin(value.toLowerCase()))
     .replace(/['’.]/g, '')
     .replace(/[^a-z0-9]+/g, ' ')
     .trim();
@@ -32,13 +57,19 @@ export function nameTokens(value: string): string[] {
   return normalized ? normalized.split(' ') : [];
 }
 
+/**
+ * The words of a query worth matching on. Middle initials are dropped rather than rejected:
+ * people type "Grant E Biggs", and refusing the whole query over the "E" left them stuck on the
+ * search screen with no idea which part was wrong. Stored names keep their initials as candidate
+ * words, so dropping one from the query never costs a match.
+ */
+export function queryTokens(query: string): string[] {
+  return nameTokens(query).filter((token) => token.length >= MIN_TOKEN_LENGTH);
+}
+
 export function isSearchableQuery(query: string): boolean {
-  const tokens = nameTokens(query);
-  return (
-    tokens.length >= MIN_QUERY_TOKENS &&
-    tokens.length <= MAX_QUERY_TOKENS &&
-    tokens.every((token) => token.length >= MIN_TOKEN_LENGTH)
-  );
+  const tokens = queryTokens(query);
+  return tokens.length >= MIN_QUERY_TOKENS && tokens.length <= MAX_QUERY_TOKENS;
 }
 
 export interface SearchResult {
@@ -99,10 +130,10 @@ function invitationScore(queryTokens: readonly string[], invitation: Invitation)
 
 export function searchInvitations(invitations: readonly Invitation[], query: string): SearchResult {
   if (!isSearchableQuery(query)) return { matches: [], truncated: false };
-  const queryTokens = nameTokens(query);
+  const tokens = queryTokens(query);
 
   const scored = invitations
-    .map((invitation, index) => ({ invitation, index, score: invitationScore(queryTokens, invitation) }))
+    .map((invitation, index) => ({ invitation, index, score: invitationScore(tokens, invitation) }))
     .filter((entry): entry is { invitation: Invitation; index: number; score: number } => entry.score !== null);
 
   scored.sort((a, b) => b.score - a.score || a.index - b.index);

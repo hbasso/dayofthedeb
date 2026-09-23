@@ -10,7 +10,7 @@ import { searchGuests } from '@/server/actions/search-guests';
 import type { SearchOutcome } from '@/types/rsvp';
 
 const MESSAGES = {
-  'invalid-query': 'Please enter a name of at least two letters, like your last name.',
+  'invalid-query': 'Please enter a name from your invitation, like a last name.',
   'no-match': 'We couldn’t find that name. Try it the way it appears on your invitation, or check the spelling.',
   error: 'Search isn’t working right now. Please try again in a moment.',
 } as const;

@@ -44,7 +44,10 @@ function isRetryableStatus(status: number): boolean {
 /** Delay before retry attempt n (1-based). Retry-After (seconds) wins when present, capped; otherwise exponential backoff plus jitter. */
 function retryDelayMs(attempt: number, retryAfterHeader: string | null, random: () => number): number {
   const retryAfterSeconds = retryAfterHeader === null ? NaN : Number(retryAfterHeader);
-  if (Number.isFinite(retryAfterSeconds)) {
+  // Only a positive delay is worth honoring. Number('') is 0, so a present-but-empty header --
+  // like a literal "0" or a negative one -- would otherwise mean "retry immediately" against an
+  // endpoint that just asked us to wait, burning every retry in milliseconds. Fall back to backoff.
+  if (Number.isFinite(retryAfterSeconds) && retryAfterSeconds > 0) {
     return Math.min(retryAfterSeconds * 1000, MAX_RETRY_AFTER_MS);
   }
   const backoff = BASE_RETRY_DELAY_MS * 2 ** (attempt - 1);

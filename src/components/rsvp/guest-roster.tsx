@@ -60,6 +60,19 @@ export function GuestRoster({ household, backLabel, onBack, onRestart, onSubmitt
 
   useEffect(() => () => clearTimeout(announceTimer.current), []);
 
+  // A submit can outlive this screen: press Back on a slow connection and the write resolves after
+  // the flow has already rewound. Acting on it then would show the confirmation over the search
+  // screen with the history index still pointing at the search entry, so the next Back would leave
+  // /rsvp entirely. Under Activity the roster is hidden rather than unmounted, but effects still
+  // clean up and re-run, so this tracks visibility either way.
+  const onScreen = useRef(true);
+  useEffect(() => {
+    onScreen.current = true;
+    return () => {
+      onScreen.current = false;
+    };
+  }, []);
+
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setSubmitStatus(null);
@@ -88,10 +101,11 @@ export function GuestRoster({ household, backLabel, onBack, onRestart, onSubmitt
           answers: toRsvpAnswers(household, state),
           ...(trimmedEmail ? { email: trimmedEmail } : {}),
         });
+        if (!onScreen.current) return;
         if (result.status === 'ok') onSubmitted(result.household);
         else setSubmitStatus(result.status);
       } catch {
-        setSubmitStatus('error');
+        if (onScreen.current) setSubmitStatus('error');
       }
     });
   }
