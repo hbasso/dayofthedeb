@@ -20,6 +20,23 @@ describe('computeStats', () => {
     expect(stats.totalHouseholds).toBe(4);
   });
 
+  it('ignores an invitation with no named guests, so the response rate can still reach 100%', () => {
+    const withEmpty = [...INVITATIONS, { id: 'recEmptyRow00000', household: '', guests: [] }];
+    const both = computeStats(withEmpty, TODAY);
+    expect(both.totalHouseholds).toBe(stats.totalHouseholds);
+    expect(both.householdsResponded).toBe(stats.householdsResponded);
+  });
+
+  it('reads a timestamped response date as its day, matching what the table renders', () => {
+    const timestamped = INVITATIONS.map((invitation) => ({
+      ...invitation,
+      guests: invitation.guests.map((guest) =>
+        guest.respondedAt ? { ...guest, respondedAt: `${guest.respondedAt}T18:30:00.000Z` } : guest,
+      ),
+    }));
+    expect(computeStats(timestamped, TODAY).householdsRespondedLast7Days).toBe(stats.householdsRespondedLast7Days);
+  });
+
   it('reports plus-ones offered versus coming', () => {
     expect(stats.plusOnesOffered).toBe(4); // Grant, Truman, Emma, Bill
   });

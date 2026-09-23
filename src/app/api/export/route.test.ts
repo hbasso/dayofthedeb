@@ -37,20 +37,14 @@ describe('GET /api/export', () => {
     expect(mocks.getInvitations).not.toHaveBeenCalled();
   });
 
-  it('redirects to admin login on a navigate request with an invalid admin cookie', async () => {
+  // The proxy answers every unauthenticated /api/ admin request with a 401 before this handler
+  // runs, navigations included, so the route never needs to distinguish them.
+  it.each([['navigate'], ['cors']])('answers 401 for a %s request with no admin session', async (mode) => {
     const response = await GET(
-      new NextRequest('http://localhost:3000/api/export', { headers: { 'sec-fetch-mode': 'navigate' } }),
-    );
-    expect(response.status).toBe(307);
-    expect(response.headers.get('location')).toBe('http://localhost:3000/admin/login?next=%2Fadmin');
-    expect(mocks.getInvitations).not.toHaveBeenCalled();
-  });
-
-  it('still answers 401 when sec-fetch-mode is not navigate', async () => {
-    const response = await GET(
-      new NextRequest('http://localhost:3000/api/export', { headers: { 'sec-fetch-mode': 'cors' } }),
+      new NextRequest('http://localhost:3000/api/export', { headers: { 'sec-fetch-mode': mode } }),
     );
     expect(response.status).toBe(401);
+    expect(mocks.getInvitations).not.toHaveBeenCalled();
   });
 
   it('downloads the headcount CSV by default', async () => {

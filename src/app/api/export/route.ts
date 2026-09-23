@@ -13,13 +13,9 @@ import { getInvitations } from '@/lib/guest-list';
 import { ADMIN_SESSION_COOKIE, isAdminSealValid } from '@/lib/session';
 
 export async function GET(request: NextRequest): Promise<Response> {
-  // The proxy also guards this route; checking here means the API never relies on it.
+  // The proxy already returns a bare 401 for every unauthenticated /api/ admin path, so nothing
+  // reaches here without a valid session. This is the backstop for the day that changes.
   if (!(await isAdminSealValid(request.cookies.get(ADMIN_SESSION_COOKIE)?.value))) {
-    // A download link opened directly (e.g. an expired session revisited) is a navigation, not
-    // a fetch/XHR: send it through the login page instead of a bare 401 the browser just shows.
-    if (request.headers.get('sec-fetch-mode') === 'navigate') {
-      return Response.redirect(new URL('/admin/login?next=%2Fadmin', request.url), 307);
-    }
     return new Response('Unauthorized', { status: 401 });
   }
 
