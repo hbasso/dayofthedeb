@@ -6,7 +6,7 @@ import { HouseholdCombobox } from '@/components/admin/household-combobox';
 import { toStatusFilter, type GuestFilters, type HouseholdOption } from '@/lib/admin/guest-rows';
 
 const SELECT_CLASS =
-  'h-10 w-full rounded-lg border border-input bg-card px-3 text-base focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none';
+  'h-10 w-full rounded-lg border border-input bg-card px-3 text-base focus-visible:ring-3 focus-visible:ring-ring focus-visible:outline-hidden';
 
 const STATUS_OPTIONS: { value: GuestFilters['status']; label: string }[] = [
   { value: 'all', label: 'All responses' },

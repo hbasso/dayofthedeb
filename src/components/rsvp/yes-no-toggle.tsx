@@ -36,7 +36,7 @@ export function YesNoToggle({
             <label
               key={option}
               className={cn(
-                'flex h-12 cursor-pointer items-center justify-center rounded-lg border-2 px-2 text-center text-base font-semibold transition-colors has-focus-visible:ring-3 has-focus-visible:ring-ring/50',
+                'flex h-12 cursor-pointer items-center justify-center rounded-lg border-2 px-2 text-center text-base font-semibold transition-colors has-focus-visible:ring-3 has-focus-visible:ring-ring',
                 // A blocked submit focuses the radio by script, which may not count as :focus-visible after a tap.
                 error && 'has-focus:ring-3 has-focus:ring-destructive/40',
                 selected && option === 'yes' && 'border-success bg-success text-success-foreground',

@@ -2,12 +2,14 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
+/* Light-only by decision: pinning `dark:` to a class nothing sets keeps shadcn's own dark
+   styles dormant. Without this Tailwind would fall back to prefers-color-scheme and apply them
+   against a palette that has no dark values. */
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
   --font-sans: var(--font-source-sans), ui-sans-serif, system-ui, sans-serif;
   --font-display: var(--font-fraunces), ui-serif, Georgia, serif;
-  --font-loteria: var(--font-jost), ui-sans-serif, system-ui, sans-serif;
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -52,9 +54,9 @@
 
   --primary: oklch(0.539 0.215 352.6); /* fiesta pink #C2127A (deepened from #E91E8C for AA contrast) */
   --primary-foreground: oklch(1 0 0);
-  --secondary: oklch(0.675 0.151 65.6); /* marigold #D48000 */
-  --secondary-foreground: oklch(0.33 0.134 26.3); /* ink, not white: white on marigold is 3.05:1 */
-  --accent: oklch(0.675 0.151 65.6);
+  --secondary: oklch(0.7 0.151 65.6); /* marigold #DD8816 */
+  --secondary-foreground: oklch(0.33 0.134 26.3); /* ink on marigold is 4.71:1; white would be 3.05:1 */
+  --accent: oklch(0.7 0.151 65.6); /* same marigold; kept in step so the palette reads as one hue */
   --accent-foreground: oklch(0.33 0.134 26.3);
 
   --muted: oklch(0.94 0.022 80.7); /* #F3EADB */
@@ -87,7 +89,7 @@
  */
 .hero-title-print {
   text-shadow:
-    0.02em 0.02em 0 #c2127a,
-    0.04em 0.04em 0 #d48000,
+    0.02em 0.02em 0 var(--primary),
+    0.04em 0.04em 0 var(--secondary),
     0.058em 0.058em 0.02em rgb(0 0 0 / 0.4);
 }

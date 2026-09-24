@@ -14,8 +14,10 @@ export function NavLink({ href, children }: { href: string; children: ReactNode 
       href={href}
       aria-current={active ? 'page' : undefined}
       className={cn(
-        'inline-flex h-11 items-center rounded-lg px-3 text-base font-semibold transition-colors hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none',
-        active ? 'text-primary' : 'text-foreground',
+        'inline-flex h-11 items-center rounded-lg px-3 text-base font-semibold transition-colors hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring focus-visible:outline-hidden',
+        // Underlined, not just recoloured: primary against foreground is 2.27:1, which a
+        // colour-vision-deficient reader cannot rely on to tell the current page apart.
+        active ? 'text-primary underline decoration-2 underline-offset-8' : 'text-foreground',
       )}
     >
       {children}

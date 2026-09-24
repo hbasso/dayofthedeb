@@ -56,7 +56,7 @@ export function EventDetails() {
             className={
               detail.link
                 ? // Marigold rather than Pinterest red: the tint has to sit next to the pink hero.
-                  'relative rounded-xl border-2 border-accent/50 bg-accent/10 p-4 transition-colors hover:border-accent hover:bg-accent/20 has-[a:focus-visible]:ring-3 has-[a:focus-visible]:ring-ring/50'
+                  'relative rounded-xl border-2 border-accent/50 bg-accent/10 p-4 transition-colors hover:border-accent hover:bg-accent/20 has-[a:focus-visible]:ring-3 has-[a:focus-visible]:ring-ring'
                 : 'rounded-xl border border-border bg-card p-4'
             }
           >
@@ -70,7 +70,7 @@ export function EventDetails() {
                   href={detail.link.href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="mt-2 flex items-center gap-2 text-base font-semibold after:absolute after:inset-0 focus-visible:outline-none"
+                  className="mt-2 flex items-center gap-2 text-base font-semibold after:absolute after:inset-0 focus-visible:outline-hidden"
                 >
                   {detail.link.icon}
                   <span className="underline underline-offset-4">{detail.link.label}</span>

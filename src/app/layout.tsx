@@ -1,12 +1,10 @@
 import type { Metadata } from 'next';
-import { Fraunces, Jost, Source_Sans_3 } from 'next/font/google';
-import { ThemeProvider } from '@/components/theme-provider';
+import { Fraunces, Source_Sans_3 } from 'next/font/google';
 import { siteConfig } from '@/config/site';
 import './globals.css';
 
 const display = Fraunces({ subsets: ['latin'], variable: '--font-fraunces', axes: ['opsz'] });
 const text = Source_Sans_3({ subsets: ['latin'], variable: '--font-source-sans' });
-const loteria = Jost({ subsets: ['latin'], variable: '--font-jost' });
 
 export const metadata: Metadata = {
   title: siteConfig.name,
@@ -16,12 +14,10 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" suppressHydrationWarning className={`${display.variable} ${text.variable} ${loteria.variable}`}>
-      <body className="min-h-dvh bg-background font-sans text-foreground antialiased">
-        <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false} disableTransitionOnChange>
-          {children}
-        </ThemeProvider>
-      </body>
+    // The site is light-only by decision. globals.css pins Tailwind's `dark:` variant to a .dark
+    // class that is never applied, so shadcn's own dark styles stay dormant even on a dark OS.
+    <html lang="en" className={`${display.variable} ${text.variable}`}>
+      <body className="min-h-dvh bg-background font-sans text-foreground antialiased">{children}</body>
     </html>
   );
 }
