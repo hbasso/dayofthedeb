@@ -1,6 +1,6 @@
 import { Tbd } from '@/components/content/tbd';
 import { siteConfig } from '@/config/site';
-import { venueAddressLines } from '@/lib/venue';
+import { venueAddressLines, venueTelHref } from '@/lib/venue';
 
 export function VenueOverview() {
   const { venue } = siteConfig;
@@ -25,6 +25,14 @@ export function VenueOverview() {
         <span className="font-semibold">Entrance: </span>
         <Tbd value={venue.entranceNote} />
       </p>
+      {venue.phone && (
+        <p className="text-lg">
+          <span className="font-semibold">Venue phone: </span>
+          <a href={venueTelHref(venue.phone)} className="text-link underline underline-offset-4">
+            {venue.phone}
+          </a>
+        </p>
+      )}
     </section>
   );
 }

@@ -13,3 +13,11 @@ export function venueSingleLine(venue: VenueInfo): string {
 export function venueMapQuery(venue: VenueInfo): string {
   return `${venue.name}, ${venue.streetAddress}, ${venue.city}, ${venue.region} ${venue.postalCode}`;
 }
+
+/**
+ * A dialable href for the venue's number. The venue is in San Antonio and the number is stored in
+ * US national format, so a +1 is safe to assume here; revisit if the venue ever isn't.
+ */
+export function venueTelHref(phone: string): string {
+  return `tel:+1${phone.replace(/\D/g, '')}`;
+}

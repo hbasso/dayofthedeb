@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { VenueInfo } from '@/config/site';
-import { venueAddressLines, venueMapQuery, venueSingleLine } from '@/lib/venue';
+import { venueAddressLines, venueMapQuery, venueSingleLine, venueTelHref } from '@/lib/venue';
 
 const venue: VenueInfo = {
   name: 'Mexico Ceaty',
@@ -10,6 +10,8 @@ const venue: VenueInfo = {
   region: 'TX',
   postalCode: '78205',
   landmark: null,
+  phone: null,
+  coordinates: null,
   description: null,
   entranceNote: null,
 };
@@ -26,5 +28,11 @@ describe('venue address helpers', () => {
 
   it('builds a map query from the venue name and street address (units confuse map search)', () => {
     expect(venueMapQuery(venue)).toBe('Mexico Ceaty, 849 E Commerce St, San Antonio, TX 78205');
+  });
+});
+
+describe('venueTelHref', () => {
+  it('strips formatting into a dialable US number', () => {
+    expect(venueTelHref('(210) 293-5714')).toBe('tel:+12102935714');
   });
 });

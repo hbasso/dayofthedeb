@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import {
+  appleMapsPointUrl,
   appleMapsSearchUrl,
   googleMapsEmbedUrl,
+  googleMapsPointUrl,
   googleMapsSearchUrl,
   lyftDropoffUrl,
   uberDropoffUrl,
@@ -20,6 +22,19 @@ describe('map links', () => {
     const apple = new URL(appleMapsSearchUrl(QUERY));
     expect(apple.origin).toBe('https://maps.apple.com');
     expect(apple.searchParams.get('q')).toBe(QUERY);
+  });
+
+  it('opens an exact point rather than a list of search results', () => {
+    const point = { latitude: 29.4233336, longitude: -98.4849453 };
+
+    const google = new URL(googleMapsPointUrl(point));
+    expect(google.origin + google.pathname).toBe('https://www.google.com/maps/search/');
+    expect(google.searchParams.get('query')).toBe('29.4233336,-98.4849453');
+
+    const apple = new URL(appleMapsPointUrl(point, 'Rivercenter Commerce Street Garage'));
+    expect(apple.origin).toBe('https://maps.apple.com');
+    expect(apple.searchParams.get('ll')).toBe('29.4233336,-98.4849453');
+    expect(apple.searchParams.get('q')).toBe('Rivercenter Commerce Street Garage');
   });
 
   it('builds a keyless Google Maps embed link', () => {

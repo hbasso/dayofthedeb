@@ -18,7 +18,7 @@ function Option({ title, children }: { title: string; children: ReactNode }) {
 }
 
 export function ArrivalOptions() {
-  const { parking, valet, walking, accessibility } = directionsConfig;
+  const { valet, walking, accessibility } = directionsConfig;
   const valetStatus = valet.available === null ? null : valet.available ? 'Valet is available.' : 'Valet is not offered.';
 
   return (
@@ -34,10 +34,6 @@ export function ArrivalOptions() {
         <Option title="Step-free and elevator route">
           <WayfindingSteps steps={accessibility.stepFreeRoute} placeholder="Step-free route coming soon." />
           {accessibility.note && <p>{accessibility.note}</p>}
-        </Option>
-        <Option title="Driving and parking">
-          <p>{parking.summary}</p>
-          {parking.details && <p>{parking.details}</p>}
         </Option>
         <Option title="Valet">
           <p>

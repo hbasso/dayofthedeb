@@ -1,3 +1,6 @@
+// Coordinates live with the directions config; the venue is just another place we pin.
+import type { Coordinates } from '@/config/directions';
+
 export interface VenueInfo {
   name: string;
   streetAddress: string;
@@ -8,6 +11,10 @@ export interface VenueInfo {
   postalCode: string;
   /** Where the address sits, shown under it. null when there is no landmark worth naming. */
   landmark: string | null;
+  /** The venue's public phone number, as it should read on screen. null when there is none. */
+  phone: string | null;
+  /** The venue's own pin, so map links open on it rather than on a list of search results. */
+  coordinates: Coordinates | null;
   /** Short description for the venue page. null until the host confirms. */
   description: string | null;
   /** Which entrance guests should use. null until the host confirms. */
@@ -65,6 +72,8 @@ export const siteConfig: SiteConfig = {
     region: 'TX',
     postalCode: '78205',
     landmark: 'Inside the Shops at Rivercenter on the River Walk',
+    phone: '(210) 293-5714',
+    coordinates: { latitude: 29.4233841, longitude: -98.4840748 },
     description: null,
     entranceNote: null,
   },
