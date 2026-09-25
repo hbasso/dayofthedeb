@@ -113,9 +113,13 @@ export const directionsConfig: DirectionsConfig = {
       {
         id: 'garage-b',
         badge: { src: garageBBadge, alt: 'Parking Garage B' },
+        // Google lists this garage under its operator's name, "Metropolis"; Apple and the
+        // invitation both call it the Crockett Street Garage. Linking by coordinate rather than by
+        // name sidesteps that: Google opens the pin regardless of what it calls it, and Apple gets
+        // the correct name passed as the pin label.
         name: 'Crockett Street Garage',
-        address: '105 E Market St',
-        coordinates: { latitude: 29.4247389, longitude: -98.4844266 },
+        address: '300 E Crockett St',
+        coordinates: { latitude: 29.4246372, longitude: -98.4848896 },
         steps: [
           'Park in the Crockett Street Garage.',
           'Enter The Shops at Rivercenter and go down to the river level.',
