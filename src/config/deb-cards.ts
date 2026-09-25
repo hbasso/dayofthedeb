@@ -1,9 +1,9 @@
-import ainslieBashara from '../../public/AB2Deb.png';
-import annabelleBasso from '../../public/ABDeb.png';
-import dressCard from '../../public/DressCard.png';
-import emmaCantwell from '../../public/ECDeb.png';
-import eloiseFlannery from '../../public/EFDeb.png';
-import helenaHanor from '../../public/HHDeb.png';
+import ainslieBashara from '../../public/AB2Deb.webp';
+import annabelleBasso from '../../public/ABDeb.webp';
+import dressCard from '../../public/DressCard.webp';
+import emmaCantwell from '../../public/ECDeb.webp';
+import eloiseFlannery from '../../public/EFDeb.webp';
+import helenaHanor from '../../public/HHDeb.webp';
 
 /**
  * The finished lotería-style cards shown on the hero. Imported rather than referenced by
