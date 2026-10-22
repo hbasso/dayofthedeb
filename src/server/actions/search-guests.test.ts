@@ -83,7 +83,7 @@ describe('searchGuests', () => {
 
   it('reports an error when the guest list cannot be loaded', async () => {
     const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
-    mocks.getInvitations.mockRejectedValue(new Error('Airtable down'));
+    mocks.getInvitations.mockRejectedValue(new Error('database down'));
     expect(await searchGuests('Grant Biggs')).toEqual({ status: 'error' });
     expect(consoleError).toHaveBeenCalled();
     consoleError.mockRestore();

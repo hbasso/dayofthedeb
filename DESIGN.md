@@ -30,8 +30,8 @@ A private website where invited guests can RSVP for themselves and their househo
 - **TypeScript** throughout.
 - **Tailwind CSS v4** for styling.
 - **shadcn/ui** as the component primitive layer, themed via CSS variables.
-- **next-themes** as the theme provider.
-- **Airtable** as the datastore and source of truth, accessed server-side via a personal access token.
+- **Neon Postgres** as the datastore and source of truth, reached server-side over the HTTP driver with Drizzle.
+- **Drizzle ORM** (`drizzle-orm`) and **@neondatabase/serverless** for typed queries.
 - **papaparse** (CSV) and optionally **SheetJS / xlsx** for export.
 
 ---
@@ -42,9 +42,9 @@ These are the rules that keep the app simple, fast, and safe. They should hold a
 
 **Server-first.** Pages and content routes are Server Components that fetch on the server. Only genuinely interactive leaves carry `'use client'`: the search input, the roster form, the yes/no toggle, the plus-one field. Pages stay thin and compose small components; they never become large stateful files.
 
-**Hard server-only data boundary.** Everything that touches the Airtable token lives under `lib/airtable` and `server/actions`, and those modules import the `server-only` package so an accidental client import fails the build. Client components never call Airtable directly. They invoke server actions. The token must never appear in a client bundle.
+**Hard server-only data boundary.** Everything that touches `DATABASE_URL` lives under `lib/db` and `server/actions`, and those modules import the `server-only` package so an accidental client import fails the build. Client components never query the database directly. They invoke server actions. The connection string must never appear in a client bundle.
 
-**Cache the list, search in memory.** The full guest list is small (a few hundred KB of JSON). It is fetched once and cached server-side; search runs against the cached copy. The Airtable API is never in the hot path of a page view. This is what makes a spreadsheet-class backend safe at this scale.
+**Cache the list, search in memory.** The full guest list is small (a few hundred KB of JSON). It is fetched once and cached server-side; search runs against the cached copy. The database is never in the hot path of a page view. It also means Neon's free-tier compute can suspend between bursts without a guest ever waiting on a cold start, except on the first read after an idle spell.
 
 **Search runs on the server.** The client never receives the full guest list. The search form calls a server action that searches the cached list server-side and returns only matching households. This prevents anyone from scraping all guest names out of the JS bundle, which matters because names would otherwise be a weak identifier.
 
@@ -56,38 +56,43 @@ These are the rules that keep the app simple, fast, and safe. They should hold a
 
 ## 4. Data model
 
-### Airtable base: two linked tables
+### Neon Postgres: two tables
 
-**Invitations** (one record per invite, ~250)
+The schema is applied and owned by the database, not by the app. `lib/db/schema.ts` mirrors it for typing only; migrations are run deliberately by the owner, never by the app or by `drizzle-kit` on deploy.
 
-| Field | Type | Notes |
-|---|---|---|
-| Household | Single line text (primary) | Display label, e.g. "The Biggs Family". Cosmetic only, never used as a key. |
-| Contact Email | Email | Optional, one per household. Entered by the guest on the RSVP page (not by the host); used for deadline reminders and schedule-change notices. Never sent to the browser — the roster projection carries only a `hasEmailOnFile` flag. |
-| Address / City / State / Zip | Single line text | Mailing address for the printed invitation. Host reference and CSV export only; the site never reads them. |
-| Expected Size | Number | Optional headcount for the host's own tracking. |
-| Notes | Long text | Optional, host-facing. Not read by the site. |
-| Guests | Link to Guests | The household roster (auto-created reverse of the Guests link). |
-
-Household-level totals (people coming, response rate) are computed in the app from the cached list, not stored as Airtable rollups. See Section 7.
-
-**Guests** (one record per named person, ~800)
+**invitations** (one row per invite, ~250)
 
 | Field | Type | Notes |
 |---|---|---|
-| Name | Single line text (primary) | e.g. "Marco Biggs". |
-| Invitation | Link to Invitations | The join back to the household. This is what the host picks from a dropdown when adding a guest. |
-| Alt Names | Single line text | Comma-separated nicknames / accent-free spellings for search matching (e.g. "Hector" for "Héctor", "Sue" for "Susan"). |
-| Has Plus One | Checkbox | Host-set eligibility: may this guest bring a plus-one. The site reveals a plus-one name input only for an eligible guest who is attending. Not everyone is eligible (the Biggs kids are, the parents are not). |
-| Attending | Single select: Yes / No | Set by the site at RSVP. Empty means no response yet. |
-| Plus One Name | Single line text | The plus-one's name, captured at RSVP when an eligible attending guest brings someone. A filled value is what counts a +1 toward the headcount. Hosts may pre-fill if known. |
-| Responded At | Date | Set by the site on submit. |
+| `household` | text NOT NULL | Display label, e.g. "The Biggs Family". A generated `household_key` (trimmed, lowercased) carries a UNIQUE constraint, which is what makes re-imports idempotent. |
+| `primary_last_name` | text | Family name the host sorts by, when it differs from the household label. |
+| `source` | text | Which host list the household came from. Host reference and export only. |
+| `contact_email` | text | Optional, one per household. Entered by the guest on the RSVP page (not by the host); used for deadline reminders and schedule-change notices. Never sent to the browser — the roster projection carries only a `hasEmailOnFile` flag. |
+| `address` / `city` / `state` / `zip` | text | Mailing address for the printed invitation. Host reference and CSV export only; the site never reads them. |
+| `expected_size` | integer | Optional headcount for the host's own tracking. |
+| `notes` | text | Optional, host-facing. Not read by the site. |
+
+Guests hang off the invitation by foreign key; deleting an invitation cascades to its guests.
+
+Household-level totals (people coming, response rate) are computed in the app from the cached list, never stored. See Section 7.
+
+**guests** (one row per named person, ~800)
+
+| Field | Type | Notes |
+|---|---|---|
+| `name` | text NOT NULL | e.g. "Marco Biggs". A generated `name_key` is UNIQUE per invitation, so a re-import updates a person rather than duplicating them. |
+| `invitation_id` | uuid NOT NULL | Foreign key to the household, ON DELETE CASCADE. |
+| `alt_names` | text[] NOT NULL | Nicknames / accent-free spellings for search matching (e.g. "Hector" for "Héctor", "Sue" for "Susan"). A real array now, not a comma-separated string. |
+| `has_plus_one` | boolean NOT NULL | Host-set eligibility: may this guest bring a plus-one. The site reveals a plus-one name input only for an eligible guest who is attending. Not everyone is eligible (the Biggs kids are, the parents are not). |
+| `attending` | text CHECK (yes/no) | Set by the site at RSVP. NULL means no response yet. |
+| `plus_one_name` | text | The plus-one's name, captured at RSVP when an eligible attending guest brings someone. A filled value is what counts a +1 toward the headcount. Hosts may pre-fill if known. |
+| `responded_at` | timestamptz | Set by the site on submit. A full timestamp, so the date helpers reduce it to a calendar day in the event time zone for display and export. |
 
 A plus-one is not its own record. It is a checkbox plus a name on the named guest's own row. This resolves the earlier boolean-vs-name question: the name is captured (via Plus One Name), and there are no separate or placeholder +1 rows for hosts to manage. If a guest's date is known ahead of time and you want them treated as a full guest, just add them as their own named row instead.
 
-The base already exists in Airtable with these two tables, and hosts enter invitations and guests into it directly; there is no spreadsheet import step. The app connects to it via `AIRTABLE_BASE_ID`.
+The guest list is loaded by importing the host's sheet, upserting on the generated keys. An import only ever touches host-owned columns (`has_plus_one`, `alt_names`, addresses, notes); it never overwrites `attending`, `plus_one_name`, `responded_at` or `contact_email`, which belong to the guest, and it never deletes anyone. Removals are a deliberate, separate step.
 
-The 1,000-record free-tier cap is crossed by design at full data (~1,050 records across both tables, counted per base). Upgrade to Team before the real list grows past the cap, not after hitting the wall, because records past the cap silently fail to insert.
+There is no record cap and no API rate limit to design around, which is why this replaced Airtable.
 
 ### Domain types (`types/domain.ts`)
 
@@ -112,9 +117,9 @@ export interface Invitation {
 }
 ```
 
-The Airtable mappers in `lib/airtable` translate records to these types. The rest of the app depends only on the domain types, never on Airtable record shapes.
+`lib/db/queries.ts` maps rows to these types. The rest of the app depends only on the domain types, never on row shapes. `Invitation` also carries the host-only `primaryLastName` and `source`, used for sorting and the host's export.
 
-The app addresses Airtable by table and field IDs (`lib/airtable/fields.ts`), so renaming a column in the Airtable UI does not break the site. Adding or removing a field the site reads requires updating that file.
+Ids are Postgres uuids. `lib/rsvp-input.ts` shape-checks them before any database round trip, so a malformed id never reaches a query.
 
 ---
 
@@ -169,12 +174,12 @@ The visual flow is demonstrated in the standalone HTML prototype delivered earli
 4. **Roster.** The household's named guests are listed, each with a Yes / No control. Empty means no response yet.
 5. **Conditional plus-one.** For a guest whose `hasPlusOne` is checked, marking them attending reveals a "bringing a guest?" toggle; choosing yes reveals a name input that saves to `plusOneName`. If the guest flips to No (or answers no to the toggle), the name clears. Guests without `hasPlusOne` never see this. This is the only genuinely conditional piece of interaction in the app.
 6. **Tally.** A live headcount sums attending guests plus one for each attending guest with a filled `plusOneName`. This number is exactly what the caterer export counts.
-7. **Submit.** A server action validates the payload and upserts the household's guest records in Airtable: it writes `attending`, writes or clears `plusOneName`, sets `Responded At`, then calls updateTag('guests') (read-your-own-writes) so a re-search shows fresh data. Because it upserts, the same action serves both a first response and an edit. If the guest also entered a household email, the action writes it to the invitation's `Contact Email` field as a separate, best-effort step (a failure there does not fail the RSVP); the address itself is never sent to the browser, before or after — the roster projection only ever carries whether one is on file.
+7. **Submit.** A server action validates the payload against the household the *server* loaded, then writes the whole household in a single `db.batch` transaction: `attending`, `plus_one_name` written or cleared, `responded_at`, and the household's `contact_email` if the guest entered one. It then calls updateTag('guests') (read-your-own-writes) so a re-search shows fresh data. Because every write is an update, the same action serves both a first response and an edit. One transaction means there is no half-saved household to reconcile: either everything landed or nothing did, and on failure the cache is left untouched because nothing changed. The email address is never sent to the browser, before or after — the roster projection only ever carries whether one is on file.
 8. **Confirmation.** A summary of who is coming, with a note that they can search their name again anytime to update their response.
 
 ### One route, client-driven
 
-The entire sequence above happens on `/rsvp`; there is no `/rsvp/[household]` URL. `rsvp/page.tsx` is a thin server shell that renders a client `rsvp-flow.tsx`, which owns the current step (search, results, roster, confirmation) in local state. The matched households and their rosters come back from the `searchGuests` server action and are held in that state, so selecting a household is a state change, not a navigation. This is the one place the app leans client-side rather than server-first, which is appropriate for a short multi-step wizard. The server-only data boundary still holds, because every read and write goes through a server action, never a direct Airtable call from the client.
+The entire sequence above happens on `/rsvp`; there is no `/rsvp/[household]` URL. `rsvp/page.tsx` is a thin server shell that renders a client `rsvp-flow.tsx`, which owns the current step (search, results, roster, confirmation) in local state. The matched households and their rosters come back from the `searchGuests` server action and are held in that state, so selecting a household is a state change, not a navigation. This is the one place the app leans client-side rather than server-first, which is appropriate for a short multi-step wizard. The server-only data boundary still holds, because every read and write goes through a server action, never a direct database call from the client.
 
 Server actions return a RosterHousehold projection (id, household, and per guest: id, name, hasPlusOne, attending, plusOneName); contact emails, alt names, and response dates never reach the browser. submitRsvp requires exactly one answer per guest on the invitation.
 
@@ -194,10 +199,12 @@ Everything lives under a single `/admin` page behind the admin password (Layer 3
 
 The page has four parts:
 
-- **Guest table.** The whole list, rendered from the cache, with attending status, plus-one, and response state per guest. Filtering is client-side: by attending / declined / no-response, by household, and a name search. Because the full list is already cached, all filtering is instant and hits no API, so the admin never waits on Airtable. If the row count ever feels heavy in the DOM, virtualize or client-paginate the rendered rows; this is a UI nicety, not an API concern.
+- **Guest table.** The whole list, rendered from the cache, with attending status, plus-one, and response state per guest. Filtering is client-side: by attending / declined / no-response, by household, and a name search. Because the full list is already cached, all filtering is instant and hits no database, so the admin never waits on a query. If the row count ever feels heavy in the DOM, virtualize or client-paginate the rendered rows; this is a UI nicety, not an API concern.
 - **Download CSV button.** Two downloads from /api/export. The headcount CSV (default) has one row per person coming: Name, Household, Type (Guest or Plus-one), Guest Of, Responded; its row count equals the headcount. The full guest list CSV (?scope=all) has every guest with Status and counted Plus One. Both neutralize spreadsheet formulas per cell (`neutralizeCell` in `lib/admin/export-csv.ts`, covering values with embedded line breaks) and include a UTF-8 byte-order mark for Excel. Plus-one names are whitespace-normalized on write (`lib/plus-one.ts`), so a guest-typed newline or tab never reaches the stored name or the export.
-- **Stats summary (top).** A headline number and a few supporting stats, all computed in the app from the cached list. No Airtable rollups. See below.
-- **Link to Airtable (bottom).** A link to the base in Airtable, for when the host wants to edit directly. This is the base link, gated by Airtable's own collaborator auth, not a public shared-view link. A visitor who is not an invited Airtable collaborator hits Airtable's permission wall, so the link exposes nothing even though the admin page itself is only password-protected.
+- **Stats summary (top).** A headline number and a few supporting stats, all computed in the app from the cached list. Nothing is stored. See below.
+- **No link out to the data.** There is no in-app route to the raw rows. Database access is through the Neon console, for the owner only. The admin page is password-protected and that password is shared with the caterer, so it must not become a door to everything.
+
+**Two exports, two audiences.** The headcount CSV is the caterer's: one row per person coming, and deliberately no household email or host bookkeeping. The full guest-list CSV is the host's working copy and does carry `Primary Last Name`, `Contact Email` and `Source`. The split is why the email column is safe to have at all.
 
 ### Response stats
 
@@ -217,7 +224,7 @@ A people-level rate ("620 of 800 guests answered") is fine to show too if you pr
 
 ## 8. Content pages
 
-All informational content lives on two routes: the landing page (`/`) and the venue page (`/venue`). Both are Server Components with no data fetching; their content comes from typed config, not Airtable, so they render static / ISR and stay edge-cached. They sit behind the site password (Layer 1) like everything else, but the gate is only a cheap cookie check and does not defeat caching, so they stay fast during party-night and arrival-time traffic.
+All informational content lives on two routes: the landing page (`/`) and the venue page (`/venue`). Both are Server Components with no data fetching; their content comes from typed config, not the database, so they render static / ISR and stay edge-cached. They sit behind the site password (Layer 1) like everything else, but the gate is only a cheap cookie check and does not defeat caching, so they stay fast during party-night and arrival-time traffic.
 
 **Landing (`/`)** is the general front door: the event basics (date, time, dress code), an optional `next/image` gallery strip, and clear links into the RSVP flow and the venue page. Schedule and dress-code detail live here as sections, not separate routes. The landing links to `/rsvp`; it does not itself hold the search. Five honorees (names to be announced). Placeholder River Walk photos from Unsplash (credited) until the host's photos arrive. Every unconfirmed fact renders "To be announced" from config.
 
@@ -308,7 +315,7 @@ src/
 │  │  └─ venue/page.tsx             # venue overview + map + getting-here (rideshare, parking, wayfinding, accessibility)
 │  ├─ admin/
 │  │  ├─ login/page.tsx             # admin password gate (Layer 3)
-│  │  └─ page.tsx                   # full guest list + filtering + export + Airtable link
+│  │  └─ page.tsx                   # full guest list + filtering + export
 │  └─ api/export/route.ts           # CSV/xlsx download (admin-guarded)
 ├─ components/
 │  ├─ ui/                           # shadcn primitives (generated), do not hand-edit
@@ -352,16 +359,16 @@ src/
 │  │  └─ site-footer.tsx
 │  └─ theme-provider.tsx            # next-themes wrapper (client)
 ├─ lib/
-│  ├─ airtable/
-│  │  ├─ client.ts                  # server-only Airtable client (token)
-│  │  ├─ fields.ts                  # table + field IDs
-│  │  ├─ invitations.ts             # read mappers: records -> domain types
-│  │  └─ rsvp.ts                    # write mapper + ownership validation
+│  ├─ db/
+│  │  ├─ client.ts                  # server-only Drizzle + Neon HTTP client (DATABASE_URL)
+│  │  ├─ schema.ts                  # mirrors the applied schema; never pushed
+│  │  ├─ queries.ts                 # read: one join -> domain types
+│  │  └─ rsvp.ts                    # write: ownership validation + one batched transaction
 │  ├─ guest-list.ts                 # cached fetch of the whole list (server-only)
 │  ├─ search.ts                     # pure normalize + match (no I/O, unit-tested)
 │  ├─ auth.ts                       # server-only: password checks, getSiteSession, requireSiteSession
 │  ├─ session.ts                    # iron-session options + seal check (proxy-safe)
-│  ├─ env.ts                        # lazy env getters (proxy-safe; no Airtable token here)
+│  ├─ env.ts                        # lazy env getters (proxy-safe; no DATABASE_URL here)
 │  ├─ routes.ts                     # pure: public paths, safe redirect
 │  ├─ admin/
 │  │  ├─ stats.ts                   # pure: computeStats (response summary numbers)
@@ -402,20 +409,20 @@ src/
 
 ## 11. Caching and revalidation
 
-- `lib/guest-list.ts` wraps the Airtable fetch in a `'use cache: remote'` function (shared across Vercel instances) with `cacheTag('guests')` and a `cacheLife` of a few minutes.
-- The cache profile `guestList` (next.config.ts) is stale 60s / revalidate 300s / expire 3600s.
-- The fetch must page through the Airtable list endpoint, which returns at most 100 records per request plus an `offset` token for the next page. Loop until no offset comes back, or the cache will silently hold only the first 100 guests. At ~1,050 records that is ~11 sequential requests inside the 5-per-second per-base limit, and it runs once per revalidation, not per page view.
+- `lib/guest-list.ts` wraps the database read in a `'use cache: remote'` function (shared across Vercel instances) with `cacheTag('guests')` and a `cacheLife` of a few minutes.
+- The cache profile `guestList` (next.config.ts) is stale 60s / revalidate 300s / expire 1 week. The long expiry is a deliberate answer to this event's traffic shape: replies arrive over a month, so multi-day gaps are normal, and Neon's free-tier compute suspends after five idle minutes. A short expiry would make the first guest back after a quiet spell wait for the database to wake up. Serving stale and refreshing behind them moves that cost off the critical path.
+- The staleness this trades away is bounded: a guest's own submit calls `updateTag('guests')`, so they never see their own answers go stale. Only host edits can lag, and the admin "Refresh guest list" button exists to clear that immediately.
+- The read is a single join, ordered by family name so the admin table and the export need no second sort. There is no paging to get wrong and no rate limit to stay under.
 - Reads (search, roster, admin, export) all draw from this cached list.
 - `submit-rsvp` calls `updateTag('guests')` after writing, so a guest who re-searches to edit sees their own update.
-- Host edits made directly in Airtable surface on the next revalidation window (a few minutes is acceptable). Optionally add a manual "refresh" affordance on the admin page that calls `updateTag('guests')` (admin-only server action).
+- Host edits made directly in the database surface on the next revalidation window (a few minutes is acceptable). Optionally add a manual "refresh" affordance on the admin page that calls `updateTag('guests')` (admin-only server action).
 
 ---
 
 ## 12. Environment variables
 
 ```
-AIRTABLE_TOKEN=            # personal access token, scoped to the base
-AIRTABLE_BASE_ID=
+DATABASE_URL=             # Neon POOLED connection string (hostname contains "-pooler")
 SITE_PASSWORD=            # shared, printed on the invitation
 ADMIN_PASSWORD=           # admin area: host, planner, caterer (at least 4 characters)
 AUTH_SECRET=             # HMAC key for signing session cookies
@@ -442,7 +449,7 @@ Resolved: the plus-one model. A plus-one is a `Has Plus One` checkbox (host elig
 ## 14. Suggested build phases
 
 1. **Scaffold.** Next + TS + Tailwind v4, `shadcn init`, theme tokens and `ThemeProvider`, `config/site.ts`, domain types.
-2. **Data layer.** Airtable client, read/write mappers, `guest-list` cache, pure `search` module with unit tests.
+2. **Data layer.** Database client, read/write modules, `guest-list` cache, pure `search` module with unit tests.
 3. **Site gate (Layer 1).** `proxy.ts`, `/unlock`, `unlock-site` action, cookie signing in `lib/auth`.
 4. **RSVP flow.** Search action and form, results, roster with conditional plus-one, submit action (upsert), confirmation. The returning-guest edit is the same flow: the roster hydrates from current answers and resubmitting overwrites them, so it needs no extra work beyond that hydration.
 5. **Admin (Layer 3), stats, and export.** Admin login, admin page with the computed stats summary and the filterable guest table, guarded export route with CSV unpivot.
@@ -457,7 +464,7 @@ Resolved: the plus-one model. A plus-one is a `Has Plus One` checkbox (host elig
 - The plus-one conditional logic gets a test: for a guest with `hasPlusOne`, toggling attendance reveals and clears the name input, and the headcount counts a +1 only when `plusOneName` is filled.
 - Editing gets a test: re-searching a household hydrates the roster with its current answers, and resubmitting overwrites them and refreshes `Responded At`.
 - Stats get a test: the response-rate denominator is households (or named guests), never the headcount, and plus-ones are excluded from it.
-- Before the real list is entered, run the full flow end to end against the seeded example households in the base (Biggs with its two plus-one states, Musgrove, Reyes, Hunter), which exercise the structural variations.
-- Run `npm run test:airtable` to check reads, search, and a restoring write round-trip against the real base.
+- Before the real list is entered, run the full flow end to end against seeded example households (Biggs with its two plus-one states, Musgrove, Reyes, Hunter), which exercise the structural variations.
+- An import must never clobber a guest's own answers. Re-running it over a household that has already responded leaves `attending`, `plus_one_name`, `responded_at` and `contact_email` exactly as they were.
 - Do a rehearsal of the invite drop on staging. This is a one-shot event with no second chance on invite night.
 ```

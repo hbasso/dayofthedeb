@@ -64,19 +64,22 @@ describe('GET /api/export', () => {
     expect(body.charCodeAt(0)).toBe(0xfeff);
     expect(body).toContain('Priya Raman,The Biggs Family,Plus-one,Grant Biggs,2026-09-10');
     expect(body).not.toContain('Truman Biggs');
+    // This file goes to the caterer. Household emails are not theirs to have.
+    expect(body).not.toContain('biggs@example.com');
   });
 
   it('downloads the full guest list with scope=all', async () => {
     const response = await request('/api/export?scope=all', await adminCookie());
     expect(response.headers.get('content-disposition')).toContain('day-of-the-deb-guest-list-');
     const body = await response.text();
-    expect(body).toContain('Truman Biggs,The Biggs Family,Awaiting,,');
-    expect(body).not.toContain('biggs@example.com');
+    expect(body).toContain('Truman Biggs,The Biggs Family,,Awaiting,,');
+    // The host's own copy, and reminders are the reason the addresses were collected.
+    expect(body).toContain('biggs@example.com');
   });
 
   it('answers 503 when the guest list cannot be loaded', async () => {
     const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
-    mocks.getInvitations.mockRejectedValue(new Error('Airtable down'));
+    mocks.getInvitations.mockRejectedValue(new Error('database down'));
     expect((await request('/api/export', await adminCookie())).status).toBe(503);
     expect(consoleError).toHaveBeenCalled();
     consoleError.mockRestore();

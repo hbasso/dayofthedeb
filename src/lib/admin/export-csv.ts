@@ -1,10 +1,22 @@
 import Papa from 'papaparse';
-import { RESPONSE_STATUS_LABELS, type GuestRow } from '@/lib/admin/guest-rows';
+import { RESPONSE_STATUS_LABELS } from '@/lib/admin/guest-rows';
+import { toCalendarDay } from '@/lib/dates';
 import { countedPlusOne } from '@/lib/plus-one';
 import type { Invitation } from '@/types/domain';
 
+// Two audiences, two shapes. The headcount list goes to the caterer, so it carries no household
+// email and no host bookkeeping: just who is eating. The guest list is the host's working copy.
 export const HEADCOUNT_COLUMNS = ['Name', 'Household', 'Type', 'Guest Of', 'Responded'] as const;
-export const GUEST_LIST_COLUMNS = ['Name', 'Household', 'Status', 'Plus One', 'Responded'] as const;
+export const GUEST_LIST_COLUMNS = [
+  'Name',
+  'Household',
+  'Primary Last Name',
+  'Status',
+  'Plus One',
+  'Responded',
+  'Contact Email',
+  'Source',
+] as const;
 
 /** Byte-order mark so Excel opens UTF-8 names (Sofía) correctly. */
 export const UTF8_BOM = String.fromCharCode(0xfeff);
@@ -15,7 +27,7 @@ export function toHeadcountRows(invitations: readonly Invitation[]): string[][] 
     invitation.guests
       .filter((guest) => guest.attending === 'yes')
       .flatMap((guest) => {
-        const responded = guest.respondedAt ?? '';
+        const responded = toCalendarDay(guest.respondedAt ?? null) ?? '';
         const plusOne = countedPlusOne(guest);
         const rows = [[guest.name, invitation.household, 'Guest', '', responded]];
         if (plusOne) rows.push([plusOne, invitation.household, 'Plus-one', guest.name, responded]);
@@ -24,14 +36,25 @@ export function toHeadcountRows(invitations: readonly Invitation[]): string[][] 
   );
 }
 
-export function toGuestListRows(rows: readonly GuestRow[]): string[][] {
-  return rows.map((row) => [
-    row.name,
-    row.household,
-    RESPONSE_STATUS_LABELS[row.status],
-    row.plusOneName ?? '',
-    row.respondedAt ?? '',
-  ]);
+/**
+ * Built from invitations rather than the table's GuestRow, so the household email never has to
+ * exist on a type that is also serialized to the browser.
+ */
+export function toGuestListRows(invitations: readonly Invitation[]): string[][] {
+  return invitations.flatMap((invitation) =>
+    invitation.guests.map((guest) => [
+      guest.name,
+      invitation.household,
+      invitation.primaryLastName ?? '',
+      RESPONSE_STATUS_LABELS[
+        guest.attending === 'yes' ? 'attending' : guest.attending === 'no' ? 'declined' : 'awaiting'
+      ],
+      countedPlusOne(guest) ?? '',
+      toCalendarDay(guest.respondedAt ?? null) ?? '',
+      invitation.email ?? '',
+      invitation.source ?? '',
+    ]),
+  );
 }
 
 const FORMULA_TRIGGER_CODES = [

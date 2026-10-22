@@ -7,7 +7,7 @@ const DATE_ONLY = /^\d{4}-\d{2}-\d{2}$/;
  * timestamp is resolved in the event's own time zone, so a response logged at 9pm in San Antonio
  * reads as that day rather than the next one in UTC. Anything unparseable becomes null.
  */
-function calendarDay(iso: string | null): string | null {
+export function toCalendarDay(iso: string | null): string | null {
   if (!iso) return null;
   if (DATE_ONLY.test(iso)) return iso;
   const parsed = new Date(iso);
@@ -23,7 +23,7 @@ function calendarDay(iso: string | null): string | null {
 
 /** Noon UTC keeps the calendar day stable no matter where the reader is. */
 function formatDay(iso: string | null, options: Intl.DateTimeFormatOptions): string | null {
-  const day = calendarDay(iso);
+  const day = toCalendarDay(iso);
   if (!day) return null;
   const date = new Date(`${day}T12:00:00Z`);
   // A day out of range rolls over rather than failing (Feb 30 becomes Mar 2), so a typo in the
@@ -46,4 +46,15 @@ export function formatLongDate(isoDate: string | null): string | null {
 export function formatTimeRange(start: string | null, end: string | null): string | null {
   if (!start) return null;
   return end ? `${start} – ${end}` : start;
+}
+
+/** Today's calendar date in the event's time zone, as YYYY-MM-DD. */
+export function todayInEventTimeZone(now: Date = new Date()): string {
+  // en-CA formats dates as YYYY-MM-DD.
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: siteConfig.timeZone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(now);
 }

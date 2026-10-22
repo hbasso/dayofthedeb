@@ -8,7 +8,7 @@ import { ADMIN_LOGIN_PATH } from '@/lib/routes';
 
 /**
  * Covers the dashboard and the sign-in page beneath it, so the copy stays generic: a bad
- * AUTH_SECRET throws on /admin/login too, and telling the host that Airtable is busy would send
+ * AUTH_SECRET throws on /admin/login too, and telling the host that the database is busy would send
  * them to retry a page that can only keep throwing. The sign-in link is the way out of that.
  */
 export default function AdminError({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
@@ -20,7 +20,7 @@ export default function AdminError({ error, reset }: { error: Error & { digest?:
     <main className="mx-auto max-w-lg space-y-4 px-4 py-16 text-center">
       <h1 className="font-display text-3xl">Something went wrong</h1>
       <p className="text-muted-foreground">
-        Airtable may be busy, or the session may have expired. Try again, or sign in.
+        The database may be waking up, or the session may have expired. Try again, or sign in.
       </p>
       <div className="flex flex-col justify-center gap-3 sm:flex-row">
         <Button type="button" onClick={reset} className="h-11 text-base">

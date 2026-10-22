@@ -1,3 +1,4 @@
+import { toCalendarDay } from '@/lib/dates';
 import { countedPlusOne } from '@/lib/plus-one';
 import type { Invitation } from '@/types/domain';
 
@@ -17,16 +18,16 @@ export interface ResponseStats {
 }
 
 const DAY_MS = 24 * 60 * 60 * 1000;
-const DATE_ONLY = /^\d{4}-\d{2}-\d{2}$/;
 
 /**
- * Midnight UTC for a stored date. Accepts a full timestamp by taking its date part, matching what
- * lib/dates.ts renders: otherwise a timestamped Responded At would make this tile read zero while
- * "Latest response" beside it still showed a date. NaN for anything else, which never counts.
+ * Midnight UTC for the stored value's calendar day *in the event's time zone*. It has to be the
+ * same reduction lib/dates.ts uses for display: slicing the first ten characters off the ISO
+ * string reads the UTC day instead, so an 8pm response in San Antonio lands on tomorrow's date
+ * and drops out of this tile while "Latest response" beside it still shows today.
  */
 function startOfDay(value: string): number {
-  const day = DATE_ONLY.test(value) ? value : value.slice(0, 10);
-  return DATE_ONLY.test(day) ? Date.parse(`${day}T00:00:00Z`) : NaN;
+  const day = toCalendarDay(value);
+  return day ? Date.parse(`${day}T00:00:00Z`) : NaN;
 }
 
 function daysBefore(today: string, date: string): number {
@@ -40,7 +41,7 @@ function latestResponse(invitation: Invitation): string | null {
 
 /** All numbers for the admin summary (DESIGN §7). `today` is YYYY-MM-DD in the event time zone. */
 export function computeStats(invitations: readonly Invitation[], today: string): ResponseStats {
-  // A half-created Airtable row with no named guests can never respond, so counting it would cap
+  // A half-created row with no named guests can never respond, so counting it would cap
   // the response rate below 100% forever. It is not a household anyone was invited to.
   const households = invitations.filter((invitation) => invitation.guests.length > 0);
   const guests = households.flatMap((invitation) => invitation.guests);

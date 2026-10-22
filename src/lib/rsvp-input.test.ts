@@ -1,7 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { MAX_ANSWERS, parseSubmitRsvpInput } from '@/lib/rsvp-input';
 
-const id = (label: string) => `rec${label}`.padEnd(17, '0');
+// Postgres uuids. A hex digest of the label keeps each one stable and readable in failures.
+const id = (label: string) => {
+  const hex = [...label].reduce((acc, char) => acc + char.charCodeAt(0).toString(16), '').padEnd(12, '0');
+  return `00000000-0000-4000-8000-${hex.slice(0, 12)}`;
+};
 const valid = {
   invitationId: id('Biggs'),
   answers: [
@@ -56,6 +60,7 @@ describe('parseSubmitRsvpInput', () => {
     ['an array', [valid]],
     ['a missing invitation id', { answers: valid.answers }],
     ['a malformed invitation id', { ...valid, invitationId: 'recShort' }],
+    ['an Airtable-style record id', { ...valid, invitationId: 'recBiggs000000000' }],
     ['answers that are not an array', { ...valid, answers: 'yes' }],
     ['no answers', { ...valid, answers: [] }],
     ['too many answers', { ...valid, answers: Array.from({ length: MAX_ANSWERS + 1 }, () => valid.answers[1]) }],

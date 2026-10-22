@@ -25,7 +25,7 @@ export function RefreshButton() {
   return (
     <div className="flex items-center gap-2">
       <Button type="button" variant="outline" disabled={pending} onClick={handleClick} className="h-10 text-base">
-        {pending ? 'Refreshing…' : 'Refresh from Airtable'}
+        {pending ? 'Refreshing…' : 'Refresh guest list'}
       </Button>
       {failed && (
         <span role="alert" className="text-sm text-destructive">

@@ -7,8 +7,7 @@ import {
   toHeadcountRows,
   UTF8_BOM,
 } from '@/lib/admin/export-csv';
-import { toGuestRows } from '@/lib/admin/guest-rows';
-import { respondedOnDate } from '@/lib/airtable/rsvp';
+import { todayInEventTimeZone } from '@/lib/dates';
 import { getInvitations } from '@/lib/guest-list';
 import { ADMIN_SESSION_COOKIE, isAdminSealValid } from '@/lib/session';
 
@@ -25,13 +24,13 @@ export async function GET(request: NextRequest): Promise<Response> {
     const invitations = await getInvitations();
     const csv =
       scope === 'guest-list'
-        ? toCsv(GUEST_LIST_COLUMNS, toGuestListRows(toGuestRows(invitations)))
+        ? toCsv(GUEST_LIST_COLUMNS, toGuestListRows(invitations))
         : toCsv(HEADCOUNT_COLUMNS, toHeadcountRows(invitations));
 
     return new Response(UTF8_BOM + csv, {
       headers: {
         'Content-Type': 'text/csv; charset=utf-8',
-        'Content-Disposition': `attachment; filename="day-of-the-deb-${scope}-${respondedOnDate()}.csv"`,
+        'Content-Disposition': `attachment; filename="day-of-the-deb-${scope}-${todayInEventTimeZone()}.csv"`,
         'Cache-Control': 'no-store',
       },
     });

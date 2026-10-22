@@ -1,48 +1,54 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { RecordUpdate } from '@/lib/airtable/client';
-import { AIRTABLE } from '@/lib/airtable/fields';
+import type { GuestUpdate } from '@/lib/db/rsvp';
 import type { Invitation } from '@/types/domain';
 
 const mocks = vi.hoisted(() => ({
   requireSiteSession: vi.fn<() => Promise<void>>(),
   getInvitations: vi.fn<() => Promise<Invitation[]>>(),
   updateTag: vi.fn<(tag: string) => void>(),
-  updateRecords: vi.fn<(tableId: string, updates: readonly RecordUpdate[]) => Promise<void>>(),
+  writeRsvp: vi.fn<(id: string, updates: readonly GuestUpdate[], email: string | null) => Promise<void>>(),
 }));
 
 vi.mock('@/lib/auth', () => ({ requireSiteSession: mocks.requireSiteSession }));
 vi.mock('@/lib/guest-list', () => ({ GUEST_LIST_TAG: 'guests', getInvitations: mocks.getInvitations }));
 vi.mock('next/cache', () => ({ updateTag: mocks.updateTag }));
-vi.mock('@/lib/airtable/client', () => ({
-  getAirtableClient: () => ({ listAllRecords: vi.fn(), updateRecords: mocks.updateRecords }),
+// Only the write is stubbed. buildRsvpUpdates stays real, because the ownership and plus-one
+// rules it enforces are the part of this action worth testing.
+vi.mock('@/lib/db/rsvp', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/lib/db/rsvp')>()),
+  writeRsvp: mocks.writeRsvp,
 }));
 
 import { submitRsvp } from '@/server/actions/submit-rsvp';
 
-const id = (label: string) => `rec${label}`.padEnd(17, '0');
-const G = AIRTABLE.guests.fields;
-const DATE = expect.stringMatching(/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/);
+const id = (n: number) => `00000000-0000-4000-8000-${String(n).padStart(12, '0')}`;
+const BIGGS = id(1);
+const GRANT = id(2);
+const MARIO = id(3);
+const HUNTER = id(4);
+const BILL = id(5);
+const NOBODY = id(9);
 
 const biggs: Invitation = {
-  id: id('Biggs'),
+  id: BIGGS,
   household: 'The Biggs Family',
   guests: [
-    { id: id('Grant'), name: 'Grant Biggs', hasPlusOne: true, attending: null },
-    { id: id('Mario'), name: 'Mario Biggs', hasPlusOne: false, attending: null },
+    { id: GRANT, name: 'Grant Biggs', hasPlusOne: true, attending: null },
+    { id: MARIO, name: 'Mario Biggs', hasPlusOne: false, attending: null },
   ],
 };
 
 const hunter: Invitation = {
-  id: id('Hunter'),
+  id: HUNTER,
   household: 'Bill & Traci Hunter',
-  guests: [{ id: id('Bill'), name: 'Bill Hunter', hasPlusOne: false, attending: null }],
+  guests: [{ id: BILL, name: 'Bill Hunter', hasPlusOne: false, attending: null }],
 };
 
 const validInput = {
-  invitationId: biggs.id,
+  invitationId: BIGGS,
   answers: [
-    { guestId: id('Grant'), attending: 'yes', plusOneName: ' Priya Raman ' },
-    { guestId: id('Mario'), attending: 'no' },
+    { guestId: GRANT, attending: 'yes', plusOneName: ' Priya Raman ' },
+    { guestId: MARIO, attending: 'no' },
   ],
 };
 
@@ -50,47 +56,47 @@ beforeEach(() => {
   vi.clearAllMocks();
   mocks.requireSiteSession.mockResolvedValue(undefined);
   mocks.getInvitations.mockResolvedValue([biggs, hunter]);
-  mocks.updateRecords.mockResolvedValue(undefined);
+  mocks.writeRsvp.mockResolvedValue(undefined);
 });
 
 function expectNoWrite() {
-  expect(mocks.updateRecords).not.toHaveBeenCalled();
+  expect(mocks.writeRsvp).not.toHaveBeenCalled();
   expect(mocks.updateTag).not.toHaveBeenCalled();
 }
 
 describe('submitRsvp', () => {
-  it('writes every answer, refreshes the guest list, and returns the saved household', async () => {
+  it('writes every answer in one call, refreshes the guest list, and returns the saved household', async () => {
     const result = await submitRsvp(validInput);
 
-    expect(mocks.updateRecords).toHaveBeenCalledWith(AIRTABLE.guests.tableId, [
-      { id: id('Grant'), fields: { [G.attending]: 'Yes', [G.plusOneName]: 'Priya Raman', [G.respondedAt]: DATE } },
-      { id: id('Mario'), fields: { [G.attending]: 'No', [G.respondedAt]: DATE } },
-    ]);
+    expect(mocks.writeRsvp).toHaveBeenCalledTimes(1);
+    expect(mocks.writeRsvp).toHaveBeenCalledWith(
+      BIGGS,
+      [
+        { id: GRANT, attending: 'yes', plusOneName: 'Priya Raman' },
+        { id: MARIO, attending: 'no' },
+      ],
+      null,
+    );
     expect(mocks.updateTag).toHaveBeenCalledWith('guests');
-    expect(mocks.updateRecords).toHaveBeenCalledTimes(1);
     expect(result).toEqual({
       status: 'ok',
       household: {
-        id: biggs.id,
+        id: BIGGS,
         household: 'The Biggs Family',
         hasEmailOnFile: false,
         guests: [
-          { id: id('Grant'), name: 'Grant Biggs', hasPlusOne: true, attending: 'yes', plusOneName: 'Priya Raman' },
-          { id: id('Mario'), name: 'Mario Biggs', hasPlusOne: false, attending: 'no' },
+          { id: GRANT, name: 'Grant Biggs', hasPlusOne: true, attending: 'yes', plusOneName: 'Priya Raman' },
+          { id: MARIO, name: 'Mario Biggs', hasPlusOne: false, attending: 'no' },
         ],
       },
     });
-    expect(JSON.stringify(result)).not.toContain('biggs@example.com');
   });
 
-  it('writes the household email in addition to the guest answers when provided', async () => {
+  it('sends the normalized household email with the same write', async () => {
     const result = await submitRsvp({ ...validInput, email: ' Hudson.Basso@Example.COM ' });
 
-    expect(mocks.updateRecords).toHaveBeenCalledTimes(2);
-    expect(mocks.updateRecords).toHaveBeenNthCalledWith(1, AIRTABLE.guests.tableId, expect.any(Array));
-    expect(mocks.updateRecords).toHaveBeenNthCalledWith(2, AIRTABLE.invitations.tableId, [
-      { id: biggs.id, fields: { [AIRTABLE.invitations.fields.email]: 'hudson.basso@example.com' } },
-    ]);
+    expect(mocks.writeRsvp).toHaveBeenCalledTimes(1);
+    expect(mocks.writeRsvp).toHaveBeenCalledWith(BIGGS, expect.any(Array), 'hudson.basso@example.com');
     expect(result.status).toBe('ok');
     if (result.status === 'ok') expect(result.household.hasEmailOnFile).toBe(true);
   });
@@ -100,29 +106,19 @@ describe('submitRsvp', () => {
 
     const result = await submitRsvp(validInput);
 
-    expect(mocks.updateRecords).toHaveBeenCalledTimes(1);
-    expect(mocks.updateRecords).toHaveBeenCalledWith(AIRTABLE.guests.tableId, expect.any(Array));
+    expect(mocks.writeRsvp).toHaveBeenCalledWith(BIGGS, expect.any(Array), null);
     expect(result.status).toBe('ok');
     if (result.status === 'ok') expect(result.household.hasEmailOnFile).toBe(true);
+  });
+
+  it('never leaks the stored email back to the browser', async () => {
+    mocks.getInvitations.mockResolvedValue([{ ...biggs, email: 'biggs@example.com' }, hunter]);
+    expect(JSON.stringify(await submitRsvp(validInput))).not.toContain('biggs@example.com');
   });
 
   it('rejects a submission with an invalid email without writing anything', async () => {
     expect(await submitRsvp({ ...validInput, email: 'not-an-email' })).toEqual({ status: 'invalid' });
     expectNoWrite();
-  });
-
-  it('still returns ok when the household email write fails', async () => {
-    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
-    mocks.updateRecords.mockImplementation(async (tableId: string) => {
-      if (tableId === AIRTABLE.invitations.tableId) throw new Error('Airtable 503');
-    });
-
-    const result = await submitRsvp({ ...validInput, email: 'hudson.basso@example.com' });
-
-    expect(result.status).toBe('ok');
-    expect(mocks.updateTag).toHaveBeenCalledWith('guests');
-    expect(consoleError).toHaveBeenCalledWith('household email write failed', expect.any(Error));
-    consoleError.mockRestore();
   });
 
   it('checks the site session before anything else', async () => {
@@ -133,21 +129,26 @@ describe('submitRsvp', () => {
   });
 
   it('rejects malformed input', async () => {
-    expect(await submitRsvp({ invitationId: biggs.id, answers: 'yes' })).toEqual({ status: 'invalid' });
+    expect(await submitRsvp({ invitationId: BIGGS, answers: 'yes' })).toEqual({ status: 'invalid' });
+    expectNoWrite();
+  });
+
+  it('rejects an id that is not a uuid', async () => {
+    expect(await submitRsvp({ ...validInput, invitationId: 'recBiggs000000000' })).toEqual({ status: 'invalid' });
     expectNoWrite();
   });
 
   it('rejects an invitation that does not exist', async () => {
-    expect(await submitRsvp({ ...validInput, invitationId: id('Nobody') })).toEqual({ status: 'invalid' });
+    expect(await submitRsvp({ ...validInput, invitationId: NOBODY })).toEqual({ status: 'invalid' });
     expectNoWrite();
   });
 
   it('rejects answers for a guest from another household', async () => {
     const input = {
-      invitationId: biggs.id,
+      invitationId: BIGGS,
       answers: [
-        { guestId: id('Bill'), attending: 'yes' },
-        { guestId: id('Mario'), attending: 'no' },
+        { guestId: BILL, attending: 'yes' },
+        { guestId: MARIO, attending: 'no' },
       ],
     };
     expect(await submitRsvp(input)).toEqual({ status: 'invalid' });
@@ -155,17 +156,25 @@ describe('submitRsvp', () => {
   });
 
   it('rejects a submission that leaves a guest unanswered', async () => {
-    const input = { invitationId: biggs.id, answers: [{ guestId: id('Grant'), attending: 'yes' }] };
+    const input = { invitationId: BIGGS, answers: [{ guestId: GRANT, attending: 'yes' }] };
     expect(await submitRsvp(input)).toEqual({ status: 'invalid' });
     expectNoWrite();
   });
 
-  it('reports an error but still refreshes the cache when Airtable fails partway through', async () => {
+  it('reports an error but still refreshes the cache when the write fails', async () => {
     const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
-    mocks.updateRecords.mockRejectedValue(new Error('Airtable 503'));
+    mocks.writeRsvp.mockRejectedValue(new Error('connection reset'));
+
     expect(await submitRsvp(validInput)).toEqual({ status: 'error' });
+    // The transaction is all-or-nothing, but a lost response leaves the outcome unknown: a write
+    // that actually committed must not sit behind the week-long cache looking unsaved.
     expect(mocks.updateTag).toHaveBeenCalledWith('guests');
     expect(consoleError).toHaveBeenCalled();
     consoleError.mockRestore();
+  });
+
+  it('does not refresh the cache when it rejected the submission before writing', async () => {
+    expect(await submitRsvp({ ...validInput, invitationId: NOBODY })).toEqual({ status: 'invalid' });
+    expect(mocks.updateTag).not.toHaveBeenCalled();
   });
 });

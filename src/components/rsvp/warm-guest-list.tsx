@@ -4,7 +4,8 @@ import { getInvitations } from '@/lib/guest-list';
 /**
  * Renders nothing. It exists to pull the guest list into the shared cache while the guest is
  * still reading the page and typing their name, so the first search of a cold cache doesn't
- * make them wait on Airtable's paged fetch (about ten sequential round trips).
+ * make them wait on the database. The fetch itself is now one query, but Neon's free-tier
+ * compute suspends after five idle minutes, so a cold first read still costs a wake-up.
  *
  * connection() holds this back to request time. Without it the warm happens once at build and
  * the whole page turns static, which would put a cold fetch in front of the page itself rather
@@ -15,7 +16,7 @@ import { getInvitations } from '@/lib/guest-list';
  */
 export async function WarmGuestList() {
   // Outside the try: during prerendering connection() aborts by design, and that signal is
-  // React's to handle. Catching it here logged a phantom Airtable failure on every build.
+  // React's to handle. Catching it here logged a phantom fetch failure on every build.
   await connection();
   try {
     await getInvitations();

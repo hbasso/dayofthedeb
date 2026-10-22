@@ -8,7 +8,6 @@ import {
   toHeadcountRows,
 } from '@/lib/admin/export-csv';
 import { INVITATIONS, TODAY } from '@/lib/admin/fixtures';
-import { toGuestRows } from '@/lib/admin/guest-rows';
 import { computeStats } from '@/lib/admin/stats';
 
 const CRLF = String.fromCharCode(13, 10);
@@ -32,10 +31,34 @@ describe('toHeadcountRows', () => {
 
 describe('toGuestListRows', () => {
   it('lists every guest with a readable status', () => {
-    const rows = toGuestListRows(toGuestRows(INVITATIONS));
+    const rows = toGuestListRows(INVITATIONS);
     expect(rows).toHaveLength(8);
-    expect(rows[1]).toEqual(['Truman Biggs', 'The Biggs Family', 'Awaiting', '', '']);
-    expect(rows[0]).toEqual(['Grant Biggs', 'The Biggs Family', 'Attending', 'Priya Raman', '2026-09-10']);
+    expect(rows[1]).toEqual(['Truman Biggs', 'The Biggs Family', '', 'Awaiting', '', '', 'biggs@example.com', '']);
+    expect(rows[0]).toEqual([
+      'Grant Biggs',
+      'The Biggs Family',
+      '',
+      'Attending',
+      'Priya Raman',
+      '2026-09-10',
+      'biggs@example.com',
+      '',
+    ]);
+  });
+
+  it('carries the host-only columns, which the caterer headcount never does', () => {
+    const [row] = toGuestListRows([
+      {
+        id: 'inv',
+        household: 'The Biggs Family',
+        primaryLastName: 'Biggs',
+        email: 'biggs@example.com',
+        source: 'Basso',
+        guests: [{ id: 'g', name: 'Grant Biggs', hasPlusOne: false, attending: 'yes' }],
+      },
+    ]);
+    expect(row).toEqual(['Grant Biggs', 'The Biggs Family', 'Biggs', 'Attending', '', '', 'biggs@example.com', 'Basso']);
+    expect(toHeadcountRows(INVITATIONS).flat()).not.toContain('biggs@example.com');
   });
 });
 

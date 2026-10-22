@@ -37,6 +37,20 @@ describe('computeStats', () => {
     expect(computeStats(timestamped, TODAY).householdsRespondedLast7Days).toBe(stats.householdsRespondedLast7Days);
   });
 
+  it('counts an evening response on its own local day, not the next one in UTC', () => {
+    // 8pm in San Antonio on the 14th is already the 15th in UTC. Reading the UTC day would put
+    // this response in the future and drop it out of the window entirely.
+    const evening = INVITATIONS.map((invitation, index) =>
+      index === 0
+        ? {
+            ...invitation,
+            guests: invitation.guests.map((guest) => ({ ...guest, respondedAt: '2026-09-15T01:00:00.000Z' })),
+          }
+        : invitation,
+    );
+    expect(computeStats(evening, TODAY).householdsRespondedLast7Days).toBeGreaterThan(0);
+  });
+
   it('reports plus-ones offered versus coming', () => {
     expect(stats.plusOnesOffered).toBe(4); // Grant, Truman, Emma, Bill
   });
