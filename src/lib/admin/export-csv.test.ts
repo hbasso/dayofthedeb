@@ -46,7 +46,7 @@ describe('toGuestListRows', () => {
     ]);
   });
 
-  it('carries the host-only columns, which the caterer headcount never does', () => {
+  it('carries the host-only columns, which the headcount file never does', () => {
     const [row] = toGuestListRows([
       {
         id: 'inv',

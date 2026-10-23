@@ -64,7 +64,7 @@ describe('GET /api/export', () => {
     expect(body.charCodeAt(0)).toBe(0xfeff);
     expect(body).toContain('Priya Raman,The Biggs Family,Plus-one,Grant Biggs,2026-09-10');
     expect(body).not.toContain('Truman Biggs');
-    // This file goes to the caterer. Household emails are not theirs to have.
+    // This file is the one passed to venue staff. Household emails stay out of it.
     expect(body).not.toContain('biggs@example.com');
   });
 

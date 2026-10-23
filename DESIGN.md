@@ -173,7 +173,7 @@ The visual flow is demonstrated in the standalone HTML prototype delivered earli
 3. **Disambiguate.** If multiple households match a surname (e.g. three separate "Reyes" parties), each is shown as a selectable row previewing its named roster. The guest selects the correct one.
 4. **Roster.** The household's named guests are listed, each with a Yes / No control. Empty means no response yet.
 5. **Conditional plus-one.** For a guest whose `hasPlusOne` is checked, marking them attending reveals a "bringing a guest?" toggle; choosing yes reveals a name input that saves to `plusOneName`. If the guest flips to No (or answers no to the toggle), the name clears. Guests without `hasPlusOne` never see this. This is the only genuinely conditional piece of interaction in the app.
-6. **Tally.** A live headcount sums attending guests plus one for each attending guest with a filled `plusOneName`. This number is exactly what the caterer export counts.
+6. **Tally.** A live headcount sums attending guests plus one for each attending guest with a filled `plusOneName`. This number is exactly what the headcount export counts.
 7. **Submit.** A server action validates the payload against the household the *server* loaded, then writes the whole household in a single `db.batch` transaction: `attending`, `plus_one_name` written or cleared, `responded_at`, and the household's `contact_email` if the guest entered one. It then calls updateTag('guests') (read-your-own-writes) so a re-search shows fresh data. Because every write is an update, the same action serves both a first response and an edit. One transaction means there is no half-saved household to reconcile: either everything landed or nothing did, and on failure the cache is left untouched because nothing changed. The email address is never sent to the browser, before or after — the roster projection only ever carries whether one is on file.
 8. **Confirmation.** A summary of who is coming, with a note that they can search their name again anytime to update their response.
 
@@ -195,22 +195,22 @@ Editing is not a separate feature or screen. A guest who wants to change an answ
 
 ## 7. Admin and export
 
-Everything lives under a single `/admin` page behind the admin password (Layer 3). There is no separate summary route and no caterer code: anyone who needs to see responses, including the caterer, gets the admin password. The page is view-and-export only, so sharing that password lets someone read and download the list but never change it.
+Everything lives under a single `/admin` page behind the admin password (Layer 3). There is no separate summary route and no per-role code: the hosts share one password. The page is view-and-export only, so holding that password lets someone read and download the list but never change it. Vendors and event staff are given a downloaded file, never the password.
 
 The page has four parts:
 
 - **Guest table.** The whole list, rendered from the cache, with attending status, plus-one, and response state per guest. Filtering is client-side: by attending / declined / no-response, by household, and a name search. Because the full list is already cached, all filtering is instant and hits no database, so the admin never waits on a query. If the row count ever feels heavy in the DOM, virtualize or client-paginate the rendered rows; this is a UI nicety, not an API concern.
 - **Download CSV button.** Two downloads from /api/export. The headcount CSV (default) has one row per person coming: Name, Household, Type (Guest or Plus-one), Guest Of, Responded; its row count equals the headcount. The full guest list CSV (?scope=all) has every guest with Status and counted Plus One. Both neutralize spreadsheet formulas per cell (`neutralizeCell` in `lib/admin/export-csv.ts`, covering values with embedded line breaks) and include a UTF-8 byte-order mark for Excel. Plus-one names are whitespace-normalized on write (`lib/plus-one.ts`), so a guest-typed newline or tab never reaches the stored name or the export.
 - **Stats summary (top).** A headline number and a few supporting stats, all computed in the app from the cached list. Nothing is stored. See below.
-- **No link out to the data.** There is no in-app route to the raw rows. Database access is through the Neon console, for the owner only. The admin page is password-protected and that password is shared with the caterer, so it must not become a door to everything.
+- **No link out to the data.** There is no in-app route to the raw rows. Database access is through the Neon console, for the owner only. The admin page is only password-protected, so it must not become a door to everything behind it.
 
-**Two exports, two audiences.** The headcount CSV is the caterer's: one row per person coming, and deliberately no household email or host bookkeeping. The full guest-list CSV is the host's working copy and does carry `Primary Last Name`, `Contact Email` and `Source`. The split is why the email column is safe to have at all.
+**Two exports, one audience, two jobs.** Both files are downloaded by the hosts. The headcount CSV is one row per person coming, plus-ones included, and deliberately carries no contact details, which is what makes it safe to hand to venue staff. The full guest-list CSV is the hosts' working copy: every invited guest with their status, plus `Primary Last Name`, `Contact Email` and `Source`. Keeping emails out of the file that leaves the hosts' hands is the point of the split.
 
 ### Response stats
 
 All derived on the server from the cached list, a few `reduce`s over data already in memory, no schema changes. The one rule that matters: "how many people are coming" and "how many have responded" are different numbers with different denominators, and mixing them produces nonsense. Keep them separate.
 
-- **People coming (headline).** Count guests with `attending === 'yes'`, then add one for each attending guest with a non-empty `plusOneName`. This is the caterer/venue headcount, and it is where the guest-plus-one combination is resolved.
+- **People coming (headline).** Count guests with `attending === 'yes'`, then add one for each attending guest with a non-empty `plusOneName`. This is the venue headcount, and it is where the guest-plus-one combination is resolved.
 - **Response rate, by household.** Answered households over total households (a household counts as answered once any member has a non-null `attending`, or per your chosen rule). Households is the actionable denominator because the host chases families, not individuals. Plus-ones never enter this denominator: a plus-one does not RSVP, the named guest answers for them. Never divide by headcount, or the denominator grows as plus-ones arrive and the percentage misbehaves.
 - A household counts as responded once any member's attending is non-null.
 - **Duplicate names.** The admin page lists guest names that appear in more than one household so the host can make those household names easy to tell apart.
@@ -424,7 +424,7 @@ src/
 ```
 DATABASE_URL=             # Neon POOLED connection string (hostname contains "-pooler")
 SITE_PASSWORD=            # shared, printed on the invitation
-ADMIN_PASSWORD=           # admin area: host, planner, caterer (at least 4 characters)
+ADMIN_PASSWORD=           # admin area, shared among the hosts (at least 4 characters)
 AUTH_SECRET=             # HMAC key for signing session cookies
 ```
 

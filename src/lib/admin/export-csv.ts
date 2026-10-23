@@ -4,8 +4,9 @@ import { toCalendarDay } from '@/lib/dates';
 import { countedPlusOne } from '@/lib/plus-one';
 import type { Invitation } from '@/types/domain';
 
-// Two audiences, two shapes. The headcount list goes to the caterer, so it carries no household
-// email and no host bookkeeping: just who is eating. The guest list is the host's working copy.
+// Both files are the hosts'. They differ in shape and in what is safe to pass on: the headcount
+// is just who is coming, with no contact details, so it can be handed to venue staff. The guest
+// list is the working copy and carries household emails, so it stays with the hosts.
 export const HEADCOUNT_COLUMNS = ['Name', 'Household', 'Type', 'Guest Of', 'Responded'] as const;
 export const GUEST_LIST_COLUMNS = [
   'Name',
