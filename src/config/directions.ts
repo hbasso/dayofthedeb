@@ -1,7 +1,7 @@
 import type { StaticImageData } from 'next/image';
-import carBadge from '../../public/Car.webp';
-import garageABadge from '../../public/ParkingGarageA.webp';
-import garageBBadge from '../../public/ParkingGarageB.webp';
+import carBadge from '../../public/car.webp';
+import garageABadge from '../../public/parking-garage-a.webp';
+import garageBBadge from '../../public/parking-garage-b.webp';
 
 export interface Coordinates {
   latitude: number;

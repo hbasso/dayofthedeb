@@ -1,4 +1,4 @@
-import venueMapImage from '../../public/VenueMap.webp';
+import venueMapImage from '../../public/venue-map.webp';
 
 /**
  * The illustrated map from the invitation. Imported rather than referenced by URL: the site gate

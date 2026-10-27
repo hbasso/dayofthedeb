@@ -1,4 +1,4 @@
-import heroPhoto from '../../public/WaterColorCrop.webp';
+import heroPhoto from '../../public/water-color-crop.webp';
 
 /**
  * The home page banner. Imported rather than referenced by URL: the site gate would redirect
