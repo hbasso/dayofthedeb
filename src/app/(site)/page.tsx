@@ -1,7 +1,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { EventDetails } from '@/components/content/event-details';
-import { GalleryGrid } from '@/components/content/gallery-grid';
+import { LoteriaStrip } from '@/components/content/loteria-strip';
 import { Honorees } from '@/components/content/honorees';
 import { buttonClass } from '@/lib/button-class';
 import { heroImage } from '@/config/hero';
@@ -20,6 +20,9 @@ export default function HomePage() {
           fill
           priority
           placeholder="blur"
+          // Lower than the default 75: this is the LCP image and it renders under a 45% black
+          // scrim, which hides compression artefacts that would show on an unobscured photo.
+          quality={65}
           sizes="100vw"
           className="-z-10 object-cover object-center"
         />
@@ -62,7 +65,7 @@ export default function HomePage() {
       </section>
       <div className="mx-auto w-full max-w-5xl space-y-16 px-4 py-14 sm:py-20">
         <EventDetails />
-        <GalleryGrid />
+        <LoteriaStrip />
       </div>
     </main>
   );

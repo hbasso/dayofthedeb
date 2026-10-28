@@ -2,6 +2,12 @@ import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
   cacheComponents: true,
+  images: {
+    // Next 16 only honours qualities listed here, and silently falls back to 75 otherwise, so
+    // the hero's quality={65} needs 65 present to take effect. No remotePatterns: every image
+    // on the site is a local static import now.
+    qualities: [65, 75],
+  },
   cacheLife: {
     /**
      * Guest list. `revalidate` is what keeps it fresh: whenever anyone is on the site, the entry
@@ -22,18 +28,6 @@ const nextConfig: NextConfig = {
       revalidate: 300,
       expire: 604_800,
     },
-  },
-  images: {
-    // Placeholder gallery photos (src/config/gallery.ts). One entry per photo actually
-    // used there; add a new pathname here whenever a photo is added to that config.
-    remotePatterns: [
-      { protocol: 'https', hostname: 'images.unsplash.com', pathname: '/photo-1570423024093-1896ade6736b' },
-      { protocol: 'https', hostname: 'images.unsplash.com', pathname: '/photo-1616357921792-a6ea1d53e13b' },
-      { protocol: 'https', hostname: 'images.unsplash.com', pathname: '/photo-1692428572326-66edcffafca8' },
-      { protocol: 'https', hostname: 'images.unsplash.com', pathname: '/photo-1656525867077-ca7511adc7ab' },
-      { protocol: 'https', hostname: 'images.unsplash.com', pathname: '/photo-1691171347017-d3d3d7b45a95' },
-      { protocol: 'https', hostname: 'images.unsplash.com', pathname: '/photo-1674491414642-ce5816479852' },
-    ],
   },
 };
 

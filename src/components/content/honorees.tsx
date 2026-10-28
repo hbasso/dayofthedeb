@@ -25,7 +25,11 @@ export function Honorees() {
             <Image
               src={card.src}
               alt={card.alt}
-              sizes="(min-width: 1024px) 16vw, (min-width: 640px) 33vw, 50vw"
+              placeholder="blur"
+              // The caps below (max-w-44/52/56) are what these actually render at, so state those
+              // rather than a share of the viewport: 16vw on a wide monitor asked for an image
+              // nearly twice the slot, six times over, while the hero was still loading.
+              sizes="(min-width: 1024px) 224px, (min-width: 640px) 208px, 176px"
               className="h-auto w-full rounded-sm shadow-lg shadow-black/30"
             />
           </li>
