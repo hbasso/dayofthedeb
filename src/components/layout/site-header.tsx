@@ -10,7 +10,9 @@ export function SiteHeader() {
           {siteConfig.name}
         </Link>
         <nav aria-label="Main">
-          <ul className="flex items-center gap-1">
+          {/* Wraps rather than overflows: four links plus the wordmark are wider than a 360px
+              phone, so on the narrowest screens the nav takes a second line instead of clipping. */}
+          <ul className="flex flex-wrap items-center justify-end gap-x-1 gap-y-0.5">
             <li>
               <NavLink href="/">Home</NavLink>
             </li>
@@ -19,6 +21,9 @@ export function SiteHeader() {
             </li>
             <li>
               <NavLink href="/venue">Venue</NavLink>
+            </li>
+            <li>
+              <NavLink href="/dress-code">Dress code</NavLink>
             </li>
           </ul>
         </nav>

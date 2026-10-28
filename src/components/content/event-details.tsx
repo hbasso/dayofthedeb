@@ -1,5 +1,5 @@
+import Link from 'next/link';
 import type { ReactNode } from 'react';
-import { PinterestLogo } from '@/components/content/pinterest-logo';
 import { Tbd } from '@/components/content/tbd';
 import { siteConfig } from '@/config/site';
 import { formatEventDate, formatLongDate, formatTimeRange } from '@/lib/dates';
@@ -8,7 +8,7 @@ import { venueAddressLines } from '@/lib/venue';
 interface Detail {
   label: string;
   value: ReactNode;
-  /** When set, the whole card becomes a link to this address and picks up the link styling. */
+  /** When set, the whole card becomes a link to this page and picks up the link styling. */
   link?: { href: string; label: string; icon?: ReactNode };
 }
 
@@ -33,13 +33,7 @@ export function EventDetails() {
     {
       label: 'Dress code',
       value: <Tbd value={event.dressCode} />,
-      link: event.inspirationBoardUrl
-        ? {
-            href: event.inspirationBoardUrl,
-            label: 'See outfit ideas on Pinterest',
-            icon: <PinterestLogo className="size-5 shrink-0" />,
-          }
-        : undefined,
+      link: { href: '/dress-code', label: 'Click to see the look' },
     },
     { label: 'Please RSVP by', value: <Tbd value={formatEventDate(siteConfig.rsvpDeadline)} /> },
   ];
@@ -66,16 +60,13 @@ export function EventDetails() {
               {detail.link && (
                 // after:inset-0 stretches the hit area over the whole card. The anchor stays inside
                 // the <dd> so the <dl> keeps its content model: only dt, dd, and div belong in a dl.
-                <a
+                <Link
                   href={detail.link.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
                   className="mt-2 flex items-center gap-2 text-base font-semibold after:absolute after:inset-0 focus-visible:outline-hidden"
                 >
                   {detail.link.icon}
                   <span className="underline underline-offset-4">{detail.link.label}</span>
-                  <span className="sr-only"> (opens in a new tab)</span>
-                </a>
+                </Link>
               )}
             </dd>
           </div>
