@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { Suspense } from 'react';
+import { SideCards } from '@/components/content/side-cards';
 import { RsvpFlow } from '@/components/rsvp/rsvp-flow';
 import { WarmGuestList } from '@/components/rsvp/warm-guest-list';
 import { siteConfig } from '@/config/site';
@@ -13,7 +14,8 @@ export default function RsvpPage() {
   const deadline = formatEventDate(siteConfig.rsvpDeadline);
 
   return (
-    <main className="mx-auto w-full max-w-lg px-4 py-10 sm:py-16">
+    <main className="relative mx-auto w-full max-w-lg px-4 py-10 sm:py-16">
+      <SideCards />
       <header className="mb-8 space-y-2">
         <h1 className="font-display text-5xl">RSVP</h1>
         {deadline && <p className="text-lg text-muted-foreground">Please respond by {deadline}.</p>}

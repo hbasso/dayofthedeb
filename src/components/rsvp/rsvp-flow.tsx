@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { LoteriaCardGrid } from '@/components/content/loteria-card-grid';
 import { GuestRoster } from '@/components/rsvp/guest-roster';
 import { NameSearchForm } from '@/components/rsvp/name-search-form';
 import { RsvpConfirmation } from '@/components/rsvp/rsvp-confirmation';
@@ -51,7 +52,14 @@ export function RsvpFlow() {
 
   switch (step.name) {
     case 'search':
-      return <NameSearchForm initialQuery={step.query} autoFocus={!step.initial} onFound={handleFound} />;
+      return (
+        <>
+          <NameSearchForm initialQuery={step.query} autoFocus={!step.initial} onFound={handleFound} />
+          {/* Only on this step: once a guest is reading their own roster, decoration is in the
+              way of the job they came to do. */}
+          <LoteriaCardGrid className="mt-10" />
+        </>
+      );
     case 'results':
       return (
         <SearchResults

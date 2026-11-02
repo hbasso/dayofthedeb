@@ -93,3 +93,31 @@
     0.04em 0.04em 0 var(--secondary),
     0.058em 0.058em 0.02em rgb(0 0 0 / 0.4);
 }
+
+/**
+ * Papel picado hangs from a string, so it should move like it. Each flag pivots from its top
+ * edge by a degree and a half, staggered along the row so the whole run ripples instead of
+ * swinging as one slab. Slow and small on purpose: this sits under the RSVP form and must not
+ * compete with it.
+ */
+@keyframes papel-picado-sway {
+  0%,
+  100% {
+    transform: rotate(-1.5deg);
+  }
+  50% {
+    transform: rotate(1.5deg);
+  }
+}
+
+.papel-picado-flag {
+  transform-origin: 50% 0;
+  animation: papel-picado-sway 5.4s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .papel-picado-flag {
+    animation: none;
+    transform: none;
+  }
+}

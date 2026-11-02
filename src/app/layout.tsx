@@ -17,7 +17,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     // The site is light-only by decision. globals.css pins Tailwind's `dark:` variant to a .dark
     // class that is never applied, so shadcn's own dark styles stay dormant even on a dark OS.
     <html lang="en" className={`${display.variable} ${text.variable}`}>
-      <body className="min-h-dvh bg-background font-sans text-foreground antialiased">{children}</body>
+      {/* overflow-x-clip, not hidden: full-bleed bands measured in vw overhang by the scrollbar
+          width, and clip contains them without creating a scroll container that would break
+          the admin table's sticky first column. */}
+      <body className="min-h-dvh overflow-x-clip bg-background font-sans text-foreground antialiased">{children}</body>
     </html>
   );
 }
