@@ -20,10 +20,8 @@ export default function HomePage() {
           fill
           priority
           placeholder="blur"
-          // Lower than the default 75: this is the LCP image and it renders under a 45% black
-          // scrim, which hides compression artefacts that would show on an unobscured photo.
-          quality={65}
-          sizes="100vw"
+          quality={heroImage.quality}
+          sizes={heroImage.sizes}
           className="-z-10 object-cover object-center"
         />
         {/* The photo is bright and busy, so a neutral darkening keeps white text legible on it. */}
