@@ -19,7 +19,7 @@ export default function DressCodePage() {
           <Tbd value={dressCode} placeholder="Dress code coming soon" />
         </h1>
         <p className="text-lg text-muted-foreground">
-          Placeholder for Vaquera Chiq dress code description. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+          Think fiesta: bright, fun and colorful, with cowboy boots. Hats are optional.
         </p>
       </header>
       <InspirationBoard />

@@ -87,7 +87,7 @@ export const directionsConfig: DirectionsConfig = {
       coordinates: { latitude: 29.4232636, longitude: -98.4844327 },
       description: 'Fogo de Chão at The Shops at Rivercenter, 849 E Commerce St.',
     },
-    pickupNote: null,
+    pickupNote: 'Meet your ride at the same drop-off point outside Fogo de Chão.',
     steps: [
       'Set the drop-off to Fogo de Chão at The Shops at Rivercenter, 849 E Commerce St.',
       'From E Commerce Street, go down to the river level and enter The Shops at Rivercenter.',
@@ -129,7 +129,7 @@ export const directionsConfig: DirectionsConfig = {
     ],
   },
   valet: {
-    available: null,
+    available: false,
     details: null,
   },
   walking: {
@@ -142,8 +142,8 @@ export const directionsConfig: DirectionsConfig = {
   },
   notices: [
     {
-      title: 'Another large event nearby',
-      body: 'A large event is expected downtown the same day, so please allow extra travel time. More details soon.',
+      title: 'Alamo Bowl opening ceremonies',
+      body: 'The Alamo Bowl opening ceremonies are downtown the same day, so streets may be more congested than usual. Please allow extra travel time.',
     },
   ],
 };
