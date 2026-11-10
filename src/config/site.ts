@@ -57,7 +57,7 @@ export const siteConfig: SiteConfig = {
     endTime: '1:00 AM',
     dressCode: 'Vaquera chic',
   },
-  rsvpDeadline: null,
+  rsvpDeadline: '2026-12-13',
   venue: {
     name: 'Mexico Ceaty',
     streetAddress: '849 E Commerce St',
