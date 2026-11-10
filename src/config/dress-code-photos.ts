@@ -27,6 +27,15 @@ import photo26 from '../../public/pinterest/pinterest-26.webp';
 import photo27 from '../../public/pinterest/pinterest-27.webp';
 import photo28 from '../../public/pinterest/pinterest-28.webp';
 import photo29 from '../../public/pinterest/pinterest-29.webp';
+import photo30 from '../../public/pinterest/pinterest-30.webp';
+import photo31 from '../../public/pinterest/pinterest-31.webp';
+import photo32 from '../../public/pinterest/pinterest-32.webp';
+import photo33 from '../../public/pinterest/pinterest-33.webp';
+import photo34 from '../../public/pinterest/pinterest-34.webp';
+import photo35 from '../../public/pinterest/pinterest-35.webp';
+import photo36 from '../../public/pinterest/pinterest-36.webp';
+import photo37 from '../../public/pinterest/pinterest-37.webp';
+import photo38 from '../../public/pinterest/pinterest-38.webp';
 
 /**
  * The hosts' inspiration board for the dress code.
@@ -73,4 +82,13 @@ export const dressCodePhotos = [
   photo27,
   photo28,
   photo29,
+  photo30,
+  photo31,
+  photo32,
+  photo33,
+  photo34,
+  photo35,
+  photo36,
+  photo37,
+  photo38,
 ];
