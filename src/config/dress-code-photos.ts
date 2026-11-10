@@ -39,6 +39,9 @@ import photo29 from '../../public/pinterest/pinterest-29.webp';
  * The photos are decorative in the accessibility sense: they are one illustration of a look, not
  * 29 separate facts, and the page states the dress code in words for anyone who cannot see them.
  * Give an individual photo its own alt text only if it ever carries information the copy does not.
+ *
+ * TODO: the hosts want looks for older guests added. Drop the photos into public/pinterest/,
+ * import them here and append them to the list below.
  */
 export const dressCodePhotos = [
   photo1,

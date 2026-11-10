@@ -4,7 +4,7 @@ import type { Coordinates } from '@/config/directions';
 export interface VenueInfo {
   name: string;
   streetAddress: string;
-  /** e.g. "Unit 150"; null when there is none. */
+  /** Second part of the street line, e.g. the building the venue sits in; null when there is none. */
   unit: string | null;
   city: string;
   region: string;
@@ -53,15 +53,16 @@ export const siteConfig: SiteConfig = {
   },
   event: {
     date: '2026-12-27',
-    startTime: null,
-    endTime: null,
+    startTime: '8:00 PM',
+    endTime: '1:00 AM',
     dressCode: 'Vaquera chic',
   },
   rsvpDeadline: null,
   venue: {
     name: 'Mexico Ceaty',
     streetAddress: '849 E Commerce St',
-    unit: 'Unit 150',
+    // The hosts asked for no unit number and for the building to be named instead.
+    unit: 'Rivercenter',
     city: 'San Antonio',
     region: 'TX',
     postalCode: '78205',
