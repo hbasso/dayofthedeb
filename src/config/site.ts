@@ -3,8 +3,10 @@ import type { Coordinates } from '@/config/directions';
 
 export interface VenueInfo {
   name: string;
+  /** How the home page names the venue, in place of the full address; it links to the venue page. */
+  homeLabel: string;
   streetAddress: string;
-  /** Second part of the street line, e.g. the building the venue sits in; null when there is none. */
+  /** e.g. "Unit 150"; null when there is none. */
   unit: string | null;
   city: string;
   region: string;
@@ -60,9 +62,9 @@ export const siteConfig: SiteConfig = {
   rsvpDeadline: '2026-12-13',
   venue: {
     name: 'Mexico Ceaty',
+    homeLabel: 'Mexico Ceaty at Rivercenter',
     streetAddress: '849 E Commerce St',
-    // The hosts asked for no unit number and for the building to be named instead.
-    unit: 'Rivercenter',
+    unit: 'Unit 150',
     city: 'San Antonio',
     region: 'TX',
     postalCode: '78205',

@@ -4,6 +4,7 @@ import { venueAddressLines, venueMapQuery, venueSingleLine, venueTelHref } from 
 
 const venue: VenueInfo = {
   name: 'Mexico Ceaty',
+  homeLabel: 'Mexico Ceaty at Rivercenter',
   streetAddress: '849 E Commerce St',
   unit: 'Unit 150',
   city: 'San Antonio',
