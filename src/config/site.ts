@@ -19,8 +19,6 @@ export interface VenueInfo {
   coordinates: Coordinates | null;
   /** Short description for the venue page. null until the host confirms. */
   description: string | null;
-  /** Which entrance guests should use. null until the host confirms. */
-  entranceNote: string | null;
 }
 
 export interface SiteConfig {
@@ -71,8 +69,8 @@ export const siteConfig: SiteConfig = {
     landmark: 'Inside the Shops at Rivercenter on the River Walk',
     phone: '(210) 293-5714',
     coordinates: { latitude: 29.4233841, longitude: -98.4840748 },
-    description: null,
-    entranceNote: null,
+    description:
+      "Tucked inside Rivercenter, Mexico Ceaty is the Mexican dining destination from celebrated San Antonio chef Jason Dady. Its rich mole poblano with smoked chicken was just named one of the best bites of the 2026 Austin Food & Wine Festival.",
   },
   timeZone: 'America/Chicago',
 };

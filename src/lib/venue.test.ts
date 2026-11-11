@@ -14,7 +14,6 @@ const venue: VenueInfo = {
   phone: null,
   coordinates: null,
   description: null,
-  entranceNote: null,
 };
 
 describe('venue address helpers', () => {
