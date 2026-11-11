@@ -3,7 +3,6 @@ import type { ReactNode } from 'react';
 import { Tbd } from '@/components/content/tbd';
 import { siteConfig } from '@/config/site';
 import { formatEventDate, formatLongDate, formatTimeRange } from '@/lib/dates';
-import { venueAddressLines } from '@/lib/venue';
 
 interface Detail {
   label: string;
@@ -19,16 +18,9 @@ export function EventDetails() {
     { label: 'Time', value: <Tbd value={formatTimeRange(event.startTime, event.endTime)} /> },
     {
       label: 'Place',
-      value: (
-        <>
-          <span className="block font-semibold">{venue.name}</span>
-          {venueAddressLines(venue).map((line) => (
-            <span key={line} className="block">
-              {line}
-            </span>
-          ))}
-        </>
-      ),
+      // Just the name here; the full address lives on the venue page, one tap away.
+      value: <span className="block font-semibold">{venue.homeLabel}</span>,
+      link: { href: '/venue', label: 'See venue & directions' },
     },
     {
       label: 'Dress code',
