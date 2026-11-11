@@ -21,10 +21,6 @@ export function VenueOverview() {
       <p className="text-lg">
         <Tbd value={venue.description} placeholder="More about the venue coming soon." />
       </p>
-      <p className="text-lg">
-        <span className="font-semibold">Entrance: </span>
-        <Tbd value={venue.entranceNote} />
-      </p>
       {venue.phone && (
         <p className="text-lg">
           <span className="font-semibold">Venue phone: </span>
