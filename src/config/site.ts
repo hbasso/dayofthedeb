@@ -70,7 +70,7 @@ export const siteConfig: SiteConfig = {
     phone: '(210) 293-5714',
     coordinates: { latitude: 29.4233841, longitude: -98.4840748 },
     description:
-      "Mexico Ceaty is Chef Jason Dady's Mexican food hall on the River Walk. Its mole poblano with smoked chicken was named one of the best bites of the 2026 Austin Food & Wine Festival.",
+      "Tucked inside Rivercenter, Mexico Ceaty is the Mexican dining destination from celebrated San Antonio chef Jason Dady. Its rich mole poblano with smoked chicken was just named one of the best bites of the 2026 Austin Food & Wine Festival.",
   },
   timeZone: 'America/Chicago',
 };
