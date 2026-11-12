@@ -54,20 +54,11 @@ export interface DirectionsConfig {
     details: string | null;
     garages: ParkingGarage[];
   };
+  /** Surfaced as a notice above the map, not as an arrival option of its own. */
   valet: {
     /** null until confirmed. */
     available: boolean | null;
     details: string | null;
-  };
-  walking: {
-    /** Numbered steps from the drop-off to the venue entrance. Empty until confirmed. */
-    steps: string[];
-    note: string | null;
-  };
-  accessibility: {
-    /** Numbered step-free (elevator) route. Empty until confirmed. */
-    stepFreeRoute: string[];
-    note: string | null;
   };
   notices: { title: string; body: string }[];
 }
@@ -131,14 +122,6 @@ export const directionsConfig: DirectionsConfig = {
   valet: {
     available: false,
     details: null,
-  },
-  walking: {
-    steps: [],
-    note: null,
-  },
-  accessibility: {
-    stepFreeRoute: [],
-    note: null,
   },
   notices: [
     {

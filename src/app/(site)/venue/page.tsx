@@ -1,5 +1,4 @@
 import type { Metadata } from 'next';
-import { ArrivalOptions } from '@/components/content/arrival-options';
 import { EventNotices } from '@/components/content/event-notices';
 import { IllustratedMap } from '@/components/content/illustrated-map';
 import { ParkingOptions } from '@/components/content/parking-options';
@@ -22,7 +21,6 @@ export default function VenuePage() {
       <ParkingOptions />
       <EventNotices />
       <VenueMap />
-      <ArrivalOptions />
     </main>
   );
 }

@@ -68,9 +68,11 @@ The schema is applied and owned by the database, not by the app. `lib/db/schema.
 | `primary_last_name` | text | Family name the host sorts by, when it differs from the household label. |
 | `source` | text | Which host list the household came from. Host reference and export only. |
 | `contact_email` | text | Optional, one per household. Entered by the guest on the RSVP page (not by the host); used for deadline reminders and schedule-change notices. Never sent to the browser — the roster projection carries only a `hasEmailOnFile` flag. |
-| `address` / `city` / `state` / `zip` | text | Mailing address for the printed invitation. Host reference and CSV export only; the site never reads them. |
-| `expected_size` | integer | Optional headcount for the host's own tracking. |
 | `notes` | text | Optional, host-facing. Not read by the site. |
+
+Guest postal addresses are deliberately not stored. They were only ever needed to post the
+invitations, nothing here read them, and the one piece of contact information the site does
+want -- an email for deadline reminders -- the guest enters themselves at RSVP.
 
 Guests hang off the invitation by foreign key; deleting an invitation cascades to its guests.
 
@@ -90,7 +92,7 @@ Household-level totals (people coming, response rate) are computed in the app fr
 
 A plus-one is not its own record. It is a checkbox plus a name on the named guest's own row. This resolves the earlier boolean-vs-name question: the name is captured (via Plus One Name), and there are no separate or placeholder +1 rows for hosts to manage. If a guest's date is known ahead of time and you want them treated as a full guest, just add them as their own named row instead.
 
-The guest list is loaded by importing the host's sheet, upserting on the generated keys. An import only ever touches host-owned columns (`has_plus_one`, `alt_names`, addresses, notes); it never overwrites `attending`, `plus_one_name`, `responded_at` or `contact_email`, which belong to the guest, and it never deletes anyone. Removals are a deliberate, separate step.
+The guest list is loaded by importing the host's sheet, upserting on the generated keys. An import only ever touches host-owned columns (`has_plus_one`, `alt_names`, `primary_last_name`, `source`, `notes`); it never overwrites `attending`, `plus_one_name`, `responded_at` or `contact_email`, which belong to the guest, and it never deletes anyone. Removals are a deliberate, separate step.
 
 There is no record cap and no API rate limit to design around, which is why this replaced Airtable.
 
@@ -246,10 +248,9 @@ The reader is often in a car, so the essential action comes first and detail col
 
 1. **Primary action up top.** One unmissable "Navigate to parking" button that deep-links into the guest's maps app. This is the most important decision on the page: the deep link targets the parking garage, not the venue, because routing to a Riverwalk-level address frequently strands people at the wrong level. A secondary "Navigate to the venue entrance" link is there for rideshare and walking.
 2. **Map.** The venue and recommended garage shown via the Google Maps embed from the original stack decision.
-3. **Arrival options.** A short accordion or card set, one per mode: driving and parking, valet if offered, rideshare drop-off, and walking from nearby hotels. Each expands to its specifics.
+3. **Arrival options.** One card per mode, rideshare first since parking downtown is limited. Walking and step-free routes were dropped: every route on the page already ends with the same river-level leg, and a separate accordion restating it earned nothing.
 4. **Parking detail.** The recommended garage or garages by name and address, approximate rate, and which to prefer, all from config so they are trivial to correct.
 5. **Wayfinding once parked.** Numbered steps for the walk from the garage to the entrance, including the level change from street level down to River level. This is the part a map cannot convey.
-6. **Accessibility.** The step-free, elevator route stated explicitly, since the Riverwalk has stairs and not every guest can take them.
 
 ### Components (`components/content/`)
 
@@ -336,9 +337,8 @@ src/
 │  │  ├─ venue-overview.tsx         # venue name, address, description, entrance note
 │  │  ├─ venue-map.tsx              # map + pin(s) on the venue page
 │  │  ├─ rideshare-card.tsx         # primary "Take a rideshare" card; Uber/Lyft or Open in Maps
-│  │  ├─ arrival-options.tsx        # collapsible sections: walking / step-free / parking / valet
 │  │  ├─ wayfinding-steps.tsx       # numbered steps, drop-off to entrance
-│  │  ├─ event-notices.tsx          # event-day notices (e.g. nearby large event)
+│  │  ├─ event-notices.tsx          # blocks above the map: no valet, plus event-day notices
 │  │  └─ open-in-maps-button.tsx    # platform-aware deep link (Apple Maps vs Google Maps) to the venue
 │  ├─ admin/
 │  │  ├─ admin-dashboard.tsx        # composes header, stats, exports, duplicates, table (server)

@@ -1,5 +1,5 @@
 import { sql } from 'drizzle-orm';
-import { boolean, index, integer, pgTable, text, timestamp, unique, uuid } from 'drizzle-orm/pg-core';
+import { boolean, index, pgTable, text, timestamp, unique, uuid } from 'drizzle-orm/pg-core';
 
 /**
  * Mirrors the schema already applied to the Neon database. The database is the source of truth:
@@ -17,11 +17,6 @@ export const invitations = pgTable(
     householdKey: text('household_key').generatedAlwaysAs(sql`lower(btrim(household))`),
     primaryLastName: text('primary_last_name'),
     contactEmail: text('contact_email'),
-    address: text('address'),
-    city: text('city'),
-    state: text('state'),
-    zip: text('zip'),
-    expectedSize: integer('expected_size'),
     notes: text('notes'),
     source: text('source'),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
