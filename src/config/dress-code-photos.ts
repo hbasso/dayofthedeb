@@ -24,7 +24,6 @@ import photo23 from '../../public/pinterest/pinterest-23.webp';
 import photo24 from '../../public/pinterest/pinterest-24.webp';
 import photo25 from '../../public/pinterest/pinterest-25.webp';
 import photo26 from '../../public/pinterest/pinterest-26.webp';
-import photo27 from '../../public/pinterest/pinterest-27.webp';
 import photo28 from '../../public/pinterest/pinterest-28.webp';
 import photo29 from '../../public/pinterest/pinterest-29.webp';
 import photo30 from '../../public/pinterest/pinterest-30.webp';
@@ -79,7 +78,6 @@ export const dressCodePhotos = [
   photo24,
   photo25,
   photo26,
-  photo27,
   photo28,
   photo29,
   photo30,
