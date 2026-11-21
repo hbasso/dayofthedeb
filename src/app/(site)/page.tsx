@@ -32,10 +32,14 @@ export default function HomePage() {
             <h1 className="hero-title-print font-display text-6xl leading-tight sm:text-8xl lg:text-9xl">
               {siteConfig.name}
             </h1>
-            <p className="mx-auto max-w-2xl text-xl sm:text-2xl">
-              {date ? `${date} · ` : ''}
-              {siteConfig.venue.name}, {siteConfig.venue.city}
-            </p>
+            {/* Two lines rather than one: date and place are separate facts, and a middot joining
+                them wrapped at an arbitrary point on a phone anyway. */}
+            <div className="mx-auto max-w-2xl space-y-1 text-xl sm:text-2xl">
+              {date && <p>{date}</p>}
+              <p>
+                {siteConfig.venue.name}, {siteConfig.venue.city}
+              </p>
+            </div>
           </div>
           <div className="mx-auto flex max-w-md flex-col gap-3 sm:max-w-xl sm:flex-row">
             <Link

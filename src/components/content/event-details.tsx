@@ -39,14 +39,17 @@ export function EventDetails() {
         {details.map((detail) => (
           <div
             key={detail.label}
+            // Fiesta pink with light type, matching the rideshare card on the venue page. The
+            // clickable ones carry a visible edge, because on one flat colour the tint that used to
+            // mark them is no longer available to do it. Both keep a 2px border so the two kinds of
+            // card are exactly the same size.
             className={
               detail.link
-                ? // Marigold rather than Pinterest red: the tint has to sit next to the pink hero.
-                  'relative rounded-xl border-2 border-accent/50 bg-accent/10 p-4 transition-colors hover:border-accent hover:bg-accent/20 has-[a:focus-visible]:ring-3 has-[a:focus-visible]:ring-ring'
-                : 'rounded-xl border border-border bg-card p-4'
+                ? 'relative rounded-xl border-2 border-primary-foreground/40 bg-primary p-4 text-primary-foreground transition-colors hover:border-primary-foreground has-[a:focus-visible]:ring-3 has-[a:focus-visible]:ring-primary-foreground has-[a:focus-visible]:ring-offset-2 has-[a:focus-visible]:ring-offset-background'
+                : 'rounded-xl border-2 border-transparent bg-primary p-4 text-primary-foreground'
             }
           >
-            <dt className="text-sm font-semibold tracking-wide text-muted-foreground uppercase">{detail.label}</dt>
+            <dt className="text-sm font-semibold tracking-wide uppercase opacity-90">{detail.label}</dt>
             <dd className="mt-1 text-lg">
               {detail.value}
               {detail.link && (
