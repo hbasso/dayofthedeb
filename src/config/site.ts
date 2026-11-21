@@ -62,7 +62,7 @@ export const siteConfig: SiteConfig = {
     name: 'Mexico Ceaty',
     homeLabel: 'Mexico Ceaty at Rivercenter',
     streetAddress: '849 E Commerce St',
-    unit: 'Unit 150',
+    unit: null,
     city: 'San Antonio',
     region: 'TX',
     postalCode: '78205',
