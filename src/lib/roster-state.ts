@@ -16,7 +16,8 @@ export type RosterAction =
 
 export interface RosterIssue {
   guestId: string;
-  problem: 'unanswered' | 'missing-guest-name';
+  /** nothing-answered sits on the first guest: a household may answer for only some of its guests, but not none. */
+  problem: 'nothing-answered' | 'missing-guest-name';
 }
 
 /** Hydrates from current answers so returning guests see where they left off (DESIGN §6, editing). */
@@ -74,11 +75,19 @@ export function partyHeadcount(state: RosterState): number {
   );
 }
 
+/**
+ * A household can send a partial RSVP: guests left blank are skipped and keep whatever they had
+ * before, so someone can answer for themselves now and the rest later. Only an RSVP that answers
+ * for nobody, or a plus-one with no name, is held back.
+ */
 export function rosterIssues(household: RosterHousehold, state: RosterState): RosterIssue[] {
+  const first = household.guests[0];
+  const anyAnswered = household.guests.some((guest) => (state[guest.id]?.attending ?? null) !== null);
+  if (first && !anyAnswered) return [{ guestId: first.id, problem: 'nothing-answered' }];
+
   return household.guests.flatMap((guest): RosterIssue[] => {
     const answer = state[guest.id];
-    if (!answer || answer.attending === null) return [{ guestId: guest.id, problem: 'unanswered' }];
-    if (answer.attending === 'yes' && answer.bringingGuest && answer.plusOneName.trim() === '') {
+    if (answer?.attending === 'yes' && answer.bringingGuest && answer.plusOneName.trim() === '') {
       return [{ guestId: guest.id, problem: 'missing-guest-name' }];
     }
     return [];

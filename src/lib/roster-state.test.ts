@@ -102,9 +102,20 @@ describe('partyHeadcount', () => {
 });
 
 describe('rosterIssues', () => {
-  it('flags unanswered guests and plus-ones missing a name', () => {
+  it('lets a household leave some guests unanswered', () => {
+    expect(rosterIssues(household, initRosterState(household))).toEqual([]);
+  });
+
+  it('holds back an RSVP that answers for nobody', () => {
+    const blank: RosterHousehold = {
+      ...household,
+      guests: household.guests.map((guest) => ({ ...guest, attending: null, plusOneName: undefined })),
+    };
+    expect(rosterIssues(blank, initRosterState(blank))).toEqual([{ guestId: GRANT, problem: 'nothing-answered' }]);
+  });
+
+  it('flags a plus-one missing a name', () => {
     const start = initRosterState(household);
-    expect(rosterIssues(household, start)).toEqual([{ guestId: GRANT, problem: 'unanswered' }]);
 
     const missingName = apply(
       start,

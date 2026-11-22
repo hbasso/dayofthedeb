@@ -7,7 +7,14 @@ import { PartyTally } from '@/components/rsvp/party-tally';
 import { useFocusOnMount } from '@/components/rsvp/use-focus-on-mount';
 import { Button } from '@/components/ui/button';
 import { isLikelyEmail } from '@/lib/email';
-import { initRosterState, partyHeadcount, rosterIssues, rosterReducer, toRsvpAnswers } from '@/lib/roster-state';
+import {
+  initRosterState,
+  partyHeadcount,
+  rosterIssues,
+  rosterReducer,
+  toRsvpAnswers,
+  type RosterIssue,
+} from '@/lib/roster-state';
 import { submitRsvp } from '@/server/actions/submit-rsvp';
 import type { RosterHousehold } from '@/types/rsvp';
 
@@ -24,7 +31,10 @@ const SUBMIT_ERRORS = {
   error: 'We couldn’t save your RSVP just now. Please try again in a moment.',
 } as const;
 
-const ISSUES_MESSAGE = 'Please answer for everyone in your party.';
+const ISSUES_MESSAGES: Record<RosterIssue['problem'], string> = {
+  'nothing-answered': 'Please answer for at least one person.',
+  'missing-guest-name': "Please add your guest's name.",
+};
 const EMAIL_ERROR = "That email address doesn't look right. Check it, or leave it blank.";
 
 export function GuestRoster({ household, backLabel, onBack, onRestart, onSubmitted }: GuestRosterProps) {
@@ -54,7 +64,7 @@ export function GuestRoster({ household, backLabel, onBack, onRestart, onSubmitt
     const first = issuesRef.current[0];
     if (!first) return;
     const selector =
-      first.problem === 'unanswered' ? `input[name="attending-${first.guestId}"]` : `#plus-one-${first.guestId}`;
+      first.problem === 'nothing-answered' ? `input[name="attending-${first.guestId}"]` : `#plus-one-${first.guestId}`;
     document.querySelector<HTMLElement>(selector)?.focus();
   }, [submitAttempt]);
 
@@ -87,7 +97,8 @@ export function GuestRoster({ household, backLabel, onBack, onRestart, onSubmitt
       // the message again on every blocked attempt, even when the wording is unchanged.
       setIssuesMessage('');
       clearTimeout(announceTimer.current);
-      announceTimer.current = setTimeout(() => setIssuesMessage(ISSUES_MESSAGE), 50);
+      const message = ISSUES_MESSAGES[issues[0]!.problem];
+      announceTimer.current = setTimeout(() => setIssuesMessage(message), 50);
       return;
     }
     if (emailInvalid) {
@@ -120,6 +131,12 @@ export function GuestRoster({ household, backLabel, onBack, onRestart, onSubmitt
         </h2>
         <p className="text-muted-foreground">Let us know who will be celebrating with us.</p>
       </div>
+      {household.guests.length > 1 && (
+        <p className="rounded-xl border border-border bg-card p-4">
+          You don&apos;t need to answer for everyone right now. Answer for whoever you can, and search your name
+          again later to add the rest.
+        </p>
+      )}
       <ul className="space-y-4">
         {household.guests.map((guest) => (
           <GuestRow

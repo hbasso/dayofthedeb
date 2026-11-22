@@ -21,7 +21,6 @@ export function GuestRow({ guest, answer, issue, dispatch }: GuestRowProps) {
         yesLabel="Attending"
         noLabel="Can't make it"
         onChange={(attending) => dispatch({ type: 'setAttending', guestId: guest.id, attending })}
-        error={issue === 'unanswered' ? `Please choose an answer for ${guest.name}.` : undefined}
       />
       {guest.hasPlusOne && answer.attending === 'yes' && (
         <PlusOneField
