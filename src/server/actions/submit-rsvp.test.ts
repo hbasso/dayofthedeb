@@ -155,9 +155,18 @@ describe('submitRsvp', () => {
     expectNoWrite();
   });
 
-  it('rejects a submission that leaves a guest unanswered', async () => {
+  it('saves a partial RSVP and leaves the unanswered guest as they were', async () => {
     const input = { invitationId: BIGGS, answers: [{ guestId: GRANT, attending: 'yes' }] };
-    expect(await submitRsvp(input)).toEqual({ status: 'invalid' });
+    const result = await submitRsvp(input);
+
+    expect(mocks.writeRsvp).toHaveBeenCalledWith(BIGGS, [{ id: GRANT, attending: 'yes', plusOneName: null }], null);
+    expect(result.status).toBe('ok');
+    if (result.status !== 'ok') return;
+    expect(result.household.guests.find((guest) => guest.id === MARIO)?.attending).toBeNull();
+  });
+
+  it('rejects a submission with no answers', async () => {
+    expect(await submitRsvp({ invitationId: BIGGS, answers: [] })).toEqual({ status: 'invalid' });
     expectNoWrite();
   });
 

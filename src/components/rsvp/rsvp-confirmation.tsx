@@ -11,6 +11,7 @@ export function RsvpConfirmation({ household }: { household: RosterHousehold }) 
   const headingRef = useFocusOnMount<HTMLHeadingElement>();
   const attending = household.guests.filter((guest) => guest.attending === 'yes');
   const declined = household.guests.filter((guest) => guest.attending === 'no');
+  const unanswered = household.guests.filter((guest) => guest.attending === null);
   const deadline = formatEventDate(siteConfig.rsvpDeadline);
 
   return (
@@ -39,6 +40,16 @@ export function RsvpConfirmation({ household }: { household: RosterHousehold }) 
           <h3 className="mb-2 font-semibold text-muted-foreground">Can&apos;t make it</h3>
           <ul className="space-y-1 text-lg">
             {declined.map((guest) => (
+              <li key={guest.id}>{guest.name}</li>
+            ))}
+          </ul>
+        </section>
+      )}
+      {unanswered.length > 0 && (
+        <section className="rounded-xl border border-border bg-card p-4 text-left">
+          <h3 className="mb-2 font-semibold text-muted-foreground">Still to answer</h3>
+          <ul className="space-y-1 text-lg">
+            {unanswered.map((guest) => (
               <li key={guest.id}>{guest.name}</li>
             ))}
           </ul>

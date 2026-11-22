@@ -16,8 +16,9 @@ export async function submitRsvp(input: unknown): Promise<SubmitRsvpResult> {
   let attemptedWrite = false;
   try {
     const invitation = (await getInvitations()).find((candidate) => candidate.id === parsed.invitationId);
-    // One answer per guest: buildRsvpUpdates rejects strangers and duplicates, so equal counts mean full coverage.
-    if (!invitation || parsed.answers.length !== invitation.guests.length) return { status: 'invalid' };
+    // A partial RSVP is fine: guests left out keep their earlier answer. buildRsvpUpdates rejects
+    // strangers and duplicates, and parsing already refused an empty list.
+    if (!invitation || parsed.answers.length > invitation.guests.length) return { status: 'invalid' };
 
     const updates = buildRsvpUpdates(invitation, parsed.answers);
     if (parsed.email) assertStorableEmail(invitation, parsed.email);
