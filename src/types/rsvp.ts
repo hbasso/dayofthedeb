@@ -1,6 +1,6 @@
 import type { Attendance } from '@/types/domain';
 
-/** The only guest data the browser receives: no email, alt names, or response dates. */
+/** The only guest data the browser receives: no alt names or response dates. */
 export interface RosterGuest {
   id: string;
   name: string;
@@ -14,6 +14,11 @@ export interface RosterHousehold {
   household: string;
   guests: RosterGuest[];
   hasEmailOnFile: boolean;
+  /**
+   * The household's stored email, shown back in the RSVP form so a second person from the
+   * household sees it and keeps it instead of unknowingly replacing it.
+   */
+  email: string | null;
 }
 
 export interface RsvpAnswer {
