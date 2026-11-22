@@ -13,7 +13,7 @@ export interface Guest {
 export interface Invitation {
   id: string;
   household: string;
-  /** Household email. Entered by the guest at RSVP; never sent to the browser. */
+  /** Household email. Entered by the guest at RSVP and shown back in the RSVP form. */
   email?: string;
   /** Family name the host sorts by, when it differs from the household label. */
   primaryLastName?: string;

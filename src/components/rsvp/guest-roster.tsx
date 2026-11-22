@@ -46,7 +46,9 @@ export function GuestRoster({ household, backLabel, onBack, onRestart, onSubmitt
   const announceTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const [submitStatus, setSubmitStatus] = useState<'invalid' | 'error' | null>(null);
   const [pending, startTransition] = useTransition();
-  const [email, setEmail] = useState('');
+  // Start from the household's stored email so someone coming back (or a second person from the
+  // household) sees it and keeps it rather than replacing it with a blank or a new address.
+  const [email, setEmail] = useState(household.email ?? '');
   const [emailError, setEmailError] = useState('');
   const emailRef = useRef<HTMLInputElement>(null);
 

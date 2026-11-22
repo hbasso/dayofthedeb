@@ -84,6 +84,7 @@ describe('submitRsvp', () => {
         id: BIGGS,
         household: 'The Biggs Family',
         hasEmailOnFile: false,
+        email: null,
         guests: [
           { id: GRANT, name: 'Grant Biggs', hasPlusOne: true, attending: 'yes', plusOneName: 'Priya Raman' },
           { id: MARIO, name: 'Mario Biggs', hasPlusOne: false, attending: 'no' },
@@ -98,7 +99,10 @@ describe('submitRsvp', () => {
     expect(mocks.writeRsvp).toHaveBeenCalledTimes(1);
     expect(mocks.writeRsvp).toHaveBeenCalledWith(BIGGS, expect.any(Array), 'hudson.basso@example.com');
     expect(result.status).toBe('ok');
-    if (result.status === 'ok') expect(result.household.hasEmailOnFile).toBe(true);
+    if (result.status === 'ok') {
+      expect(result.household.hasEmailOnFile).toBe(true);
+      expect(result.household.email).toBe('hudson.basso@example.com');
+    }
   });
 
   it('leaves an existing household email untouched when the guest submits none', async () => {
@@ -108,12 +112,19 @@ describe('submitRsvp', () => {
 
     expect(mocks.writeRsvp).toHaveBeenCalledWith(BIGGS, expect.any(Array), null);
     expect(result.status).toBe('ok');
-    if (result.status === 'ok') expect(result.household.hasEmailOnFile).toBe(true);
+    if (result.status === 'ok') {
+      expect(result.household.hasEmailOnFile).toBe(true);
+      expect(result.household.email).toBe('already@example.com');
+    }
   });
 
-  it('never leaks the stored email back to the browser', async () => {
-    mocks.getInvitations.mockResolvedValue([{ ...biggs, email: 'biggs@example.com' }, hunter]);
-    expect(JSON.stringify(await submitRsvp(validInput))).not.toContain('biggs@example.com');
+  it('replaces the stored email when the guest submits a different one', async () => {
+    mocks.getInvitations.mockResolvedValue([{ ...biggs, email: 'already@example.com' }, hunter]);
+
+    const result = await submitRsvp({ ...validInput, email: 'new@example.com' });
+
+    expect(mocks.writeRsvp).toHaveBeenCalledWith(BIGGS, expect.any(Array), 'new@example.com');
+    if (result.status === 'ok') expect(result.household.email).toBe('new@example.com');
   });
 
   it('rejects a submission with an invalid email without writing anything', async () => {

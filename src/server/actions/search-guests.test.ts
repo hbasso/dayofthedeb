@@ -40,6 +40,7 @@ describe('searchGuests', () => {
           id: id('Biggs'),
           household: 'The Biggs Family',
           hasEmailOnFile: true,
+          email: 'biggs@example.com',
           guests: [
             { id: id('Grant'), name: 'Grant Biggs', hasPlusOne: true, attending: 'yes', plusOneName: 'Priya Raman' },
             { id: id('Mario'), name: 'Mario Biggs', hasPlusOne: false, attending: null },
@@ -48,7 +49,6 @@ describe('searchGuests', () => {
       ],
     });
     const serialized = JSON.stringify(result);
-    expect(serialized).not.toContain('biggs@example.com');
     expect(serialized).not.toContain('G-Man');
     expect(serialized).not.toContain('2026-09-10');
   });

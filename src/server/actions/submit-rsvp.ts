@@ -30,7 +30,11 @@ export async function submitRsvp(input: unknown): Promise<SubmitRsvpResult> {
     const household = withAnswers(toRosterHousehold(invitation), parsed.answers);
     return {
       status: 'ok',
-      household: { ...household, hasEmailOnFile: household.hasEmailOnFile || Boolean(parsed.email) },
+      household: {
+        ...household,
+        hasEmailOnFile: household.hasEmailOnFile || Boolean(parsed.email),
+        email: parsed.email ?? household.email,
+      },
     };
   } catch (error) {
     if (error instanceof RsvpValidationError) return { status: 'invalid' };

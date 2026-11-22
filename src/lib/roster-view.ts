@@ -2,12 +2,16 @@ import { storedPlusOneName } from '@/lib/plus-one';
 import type { Invitation } from '@/types/domain';
 import type { RosterHousehold, RsvpAnswer } from '@/types/rsvp';
 
-/** Projection sent to the browser. Never add email, alt names, or response dates here. */
+/**
+ * Projection sent to the browser. The household email is included on purpose so the RSVP form
+ * can show it back; never add alt names or response dates here.
+ */
 export function toRosterHousehold(invitation: Invitation): RosterHousehold {
   return {
     id: invitation.id,
     household: invitation.household,
     hasEmailOnFile: Boolean(invitation.email),
+    email: invitation.email || null,
     guests: invitation.guests.map((guest) => ({
       id: guest.id,
       name: guest.name,

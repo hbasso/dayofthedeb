@@ -183,7 +183,7 @@ The visual flow is demonstrated in the standalone HTML prototype delivered earli
 
 The entire sequence above happens on `/rsvp`; there is no `/rsvp/[household]` URL. `rsvp/page.tsx` is a thin server shell that renders a client `rsvp-flow.tsx`, which owns the current step (search, results, roster, confirmation) in local state. The matched households and their rosters come back from the `searchGuests` server action and are held in that state, so selecting a household is a state change, not a navigation. This is the one place the app leans client-side rather than server-first, which is appropriate for a short multi-step wizard. The server-only data boundary still holds, because every read and write goes through a server action, never a direct database call from the client.
 
-Server actions return a RosterHousehold projection (id, household, and per guest: id, name, hasPlusOne, attending, plusOneName); contact emails, alt names, and response dates never reach the browser. submitRsvp requires exactly one answer per guest on the invitation.
+Server actions return a RosterHousehold projection (id, household, the household email, and per guest: id, name, hasPlusOne, attending, plusOneName); the email is shown back in the RSVP form so a second person from the household keeps it rather than replacing it. Alt names and response dates never reach the browser. submitRsvp accepts answers for some or all guests on the invitation.
 
 ### Name matching
 

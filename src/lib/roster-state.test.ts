@@ -19,6 +19,7 @@ const household: RosterHousehold = {
   id: id('Biggs'),
   household: 'The Biggs Family',
   hasEmailOnFile: false,
+  email: null,
   guests: [
     { id: GRANT, name: 'Grant Biggs', hasPlusOne: true, attending: null },
     { id: TRUMAN, name: 'Truman Biggs', hasPlusOne: true, attending: 'yes', plusOneName: 'Priya Raman' },
