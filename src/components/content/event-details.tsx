@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import type { ReactNode } from 'react';
+import { ClickArrow, clickArrowGap } from '@/components/content/click-arrow';
 import { Tbd } from '@/components/content/tbd';
 import { siteConfig } from '@/config/site';
 import { formatEventDate, formatLongDate, formatTimeRange } from '@/lib/dates';
@@ -8,7 +9,7 @@ interface Detail {
   label: string;
   value: ReactNode;
   /** When set, the whole card becomes a link to this page and picks up the link styling. */
-  link?: { href: string; label: string; icon?: ReactNode };
+  link?: { href: string; label: string };
 }
 
 export function EventDetails() {
@@ -20,7 +21,7 @@ export function EventDetails() {
       label: 'Place',
       // Just the name here; the full address lives on the venue page, one tap away.
       value: <span className="block font-semibold">{venue.homeLabel}</span>,
-      link: { href: '/venue', label: 'See venue & directions' },
+      link: { href: '/venue', label: 'Click to see directions' },
     },
     {
       label: 'Dress code',
@@ -45,7 +46,7 @@ export function EventDetails() {
             // card are exactly the same size.
             className={
               detail.link
-                ? 'relative rounded-xl border-2 border-primary-foreground/40 bg-primary p-4 text-primary-foreground transition-colors hover:border-primary-foreground has-[a:focus-visible]:ring-3 has-[a:focus-visible]:ring-primary-foreground has-[a:focus-visible]:ring-offset-2 has-[a:focus-visible]:ring-offset-background'
+                ? `relative rounded-xl border-2 border-primary-foreground/40 bg-primary p-4 ${clickArrowGap} text-primary-foreground transition-colors hover:border-primary-foreground has-[a:focus-visible]:ring-3 has-[a:focus-visible]:ring-primary-foreground has-[a:focus-visible]:ring-offset-2 has-[a:focus-visible]:ring-offset-background`
                 : 'rounded-xl border-2 border-transparent bg-primary p-4 text-primary-foreground'
             }
           >
@@ -59,10 +60,12 @@ export function EventDetails() {
                   href={detail.link.href}
                   className="mt-2 flex items-center gap-2 text-base font-semibold after:absolute after:inset-0 focus-visible:outline-hidden"
                 >
-                  {detail.link.icon}
                   <span className="underline underline-offset-4">{detail.link.label}</span>
                 </Link>
               )}
+              {/* Inside the <dd> rather than beside it: a <dl>'s grouping <div> may only contain
+                  dt and dd, and the card is the nearest positioned ancestor either way. */}
+              {detail.link && <ClickArrow />}
             </dd>
           </div>
         ))}

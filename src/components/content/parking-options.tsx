@@ -38,7 +38,8 @@ export function ParkingOptions() {
               query={`${garage.name}, ${garage.address}, ${city}, ${region} ${postalCode}`}
               coordinates={garage.coordinates}
               pinLabel={garage.name}
-              label="Open this garage in Maps"
+              label="Click to open in Maps"
+              target={garage.name}
               variant="outline"
             />
           </article>

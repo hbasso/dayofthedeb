@@ -1,4 +1,5 @@
 import Image from 'next/image';
+import { ClickArrow, clickArrowGapCentered } from '@/components/content/click-arrow';
 import { OpenInMapsButton } from '@/components/content/open-in-maps-button';
 import { Tbd } from '@/components/content/tbd';
 import { WayfindingSteps } from '@/components/content/wayfinding-steps';
@@ -16,8 +17,7 @@ import { venueMapQuery } from '@/lib/venue';
 // away from the very guest standing outside trying to get home.
 const rideButton = buttonClass({
   variant: 'outline',
-  className:
-    'h-auto min-h-12 w-full py-2 text-center text-base whitespace-normal text-foreground [@media(pointer:fine)]:hidden',
+  className: `relative h-auto min-h-12 w-full py-2 ${clickArrowGapCentered} text-center text-base whitespace-normal text-foreground [@media(pointer:fine)]:hidden`,
 });
 
 export function RideshareCard() {
@@ -64,12 +64,14 @@ export function RideshareCard() {
               rel="noopener noreferrer"
               className={rideButton}
             >
-              Request an Uber
+              Click to request an Uber
               <span className="sr-only"> (opens in a new tab)</span>
+              <ClickArrow />
             </a>
             <a href={lyftDropoffUrl(dropoff.coordinates)} target="_blank" rel="noopener noreferrer" className={rideButton}>
-              Request a Lyft
+              Click to request a Lyft
               <span className="sr-only"> (opens in a new tab)</span>
+              <ClickArrow />
             </a>
           </>
         )}
@@ -78,7 +80,8 @@ export function RideshareCard() {
             query={venueMapQuery(venue)}
             coordinates={venue.coordinates}
             pinLabel={venue.name}
-            label="Open the venue in Maps"
+            label="Click to open in Maps"
+            target={venue.name}
             variant="outline"
           />
         </div>
