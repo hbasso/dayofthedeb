@@ -5,6 +5,7 @@ import { useFocusOnMount } from '@/components/rsvp/use-focus-on-mount';
 import { buttonClass } from '@/lib/button-class';
 import { siteConfig } from '@/config/site';
 import { formatEventDate } from '@/lib/dates';
+import { confirmationMessage } from '@/lib/confirmation-message';
 import type { RosterHousehold } from '@/types/rsvp';
 
 export function RsvpConfirmation({ household }: { household: RosterHousehold }) {
@@ -20,7 +21,7 @@ export function RsvpConfirmation({ household }: { household: RosterHousehold }) 
         <h2 ref={headingRef} tabIndex={-1} className="font-display text-5xl text-primary outline-none">
           ¡Gracias!
         </h2>
-        <p className="text-lg">Your RSVP for {household.household} is saved.</p>
+        <p className="text-lg">{confirmationMessage(household.guests)}</p>
       </div>
       {attending.length > 0 && (
         <section className="rounded-xl border border-border bg-card p-4 text-left">
