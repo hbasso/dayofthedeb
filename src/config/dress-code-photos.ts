@@ -35,6 +35,8 @@ import photo35 from '../../public/pinterest/pinterest-35.webp';
 import photo36 from '../../public/pinterest/pinterest-36.webp';
 import photo37 from '../../public/pinterest/pinterest-37.webp';
 import photo38 from '../../public/pinterest/pinterest-38.webp';
+import photo39 from '../../public/pinterest/pinterest-39.webp';
+import photo40 from '../../public/pinterest/pinterest-40.webp';
 
 /**
  * The hosts' inspiration board for the dress code.
@@ -45,22 +47,43 @@ import photo38 from '../../public/pinterest/pinterest-38.webp';
  * photo itself rather than a grey box.
  *
  * The photos are decorative in the accessibility sense: they are one illustration of a look, not
- * 29 separate facts, and the page states the dress code in words for anyone who cannot see them.
+ * 39 separate facts, and the page states the dress code in words for anyone who cannot see them.
  * Give an individual photo its own alt text only if it ever carries information the copy does not.
  *
- * TODO: the hosts want looks for older guests added. Drop the photos into public/pinterest/,
- * import them here and append them to the list below.
+ * Order matters: it is the order a guest reads the board, left to right from the top row down (see
+ * masonryColumns). The hosts asked for photos of people first, so complete looks worn by people
+ * lead, men and women mixed and the group shots on top, then outfits shown without a face, then
+ * the details and decor.
  */
 export const dressCodePhotos = [
+  // People in complete looks
+  photo39,
+  photo40,
+  photo38,
+  photo37,
+  photo34,
+  photo36,
+  photo24,
+  photo35,
+  photo31,
+  photo20,
+  photo32,
+  photo26,
+  photo33,
+  // Outfits without a face, and partial looks
+  photo30,
+  photo4,
+  photo21,
+  photo18,
+  photo3,
+  photo9,
+  photo6,
+  photo5,
+  // Details, accessories and decor
   photo1,
   photo2,
-  photo3,
-  photo4,
-  photo5,
-  photo6,
   photo7,
   photo8,
-  photo9,
   photo10,
   photo11,
   photo12,
@@ -69,24 +92,10 @@ export const dressCodePhotos = [
   photo15,
   photo16,
   photo17,
-  photo18,
   photo19,
-  photo20,
-  photo21,
   photo22,
   photo23,
-  photo24,
   photo25,
-  photo26,
   photo28,
   photo29,
-  photo30,
-  photo31,
-  photo32,
-  photo33,
-  photo34,
-  photo35,
-  photo36,
-  photo37,
-  photo38,
 ];
